@@ -1,0 +1,5 @@
+# url extension
+comment = 'url input/ouput functions for text'
+default_version = '1.0'
+module_pathname = '$libdir/url'
+relocatable = true
