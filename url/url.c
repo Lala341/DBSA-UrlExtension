@@ -25,15 +25,17 @@ PG_MODULE_MAGIC;
 
 const unsigned int HTTPS = 443;
 const unsigned int HTTP = 8080;
+// default HTTP is 80
 
 typedef struct
 {
     char protocol[5];
-    char authority[50];
+    char host[50];
     unsigned int port;
     char path[255];
     char query[255];
     char fragment[50];
+    // Authority is host:port
 } url;
 
 static inline url* str_to_url(const char* str)
