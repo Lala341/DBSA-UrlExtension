@@ -2,8 +2,8 @@
 
 > A valid URL as defined by Java \
 > `<scheme>://<authority><path>?<query>#<fragment>`  
-> `<scheme> -mandatory`  
-> `:// -mandatory`  
+> `<scheme>: -mandatory`  
+> `// -mandatory` in case it's not a file  
 > `<authority> -mandatory`, `<authority>` is defined as `<host>:<port>`, `<host> -mandatory`, `:<port> -optional`  
 > `<path> -optional`  
 > `? -optional`  
