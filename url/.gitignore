@@ -1,3 +1,5 @@
 test.c
 *.exe
 *.o
+.idea
+.vscode
