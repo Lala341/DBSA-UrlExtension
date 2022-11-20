@@ -8,7 +8,7 @@
 static inline url* str_to_url(const char* str)
 {
     char protocol[5];
-    char authority[50];
+    char host[50];
     unsigned int port;
     char path[255];
     char query[255];
