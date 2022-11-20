@@ -42,7 +42,7 @@ static inline const char* url_to_str(const url* s)
 }
 
 /**
- * Macro mapping Constructor of URL
+ * Constructor of URL
  */
 PG_FUNCTION_INFO_V1(url_in);
 Datum url_in(PG_FUNCTION_ARGS){
@@ -53,7 +53,7 @@ Datum url_in(PG_FUNCTION_ARGS){
 }   
 
 /**
- * Macro toString
+ * Construct string from url -> toString
  */
 PG_FUNCTION_INFO_V1(url_out);
 Datum url_out(PG_FUNCTION_ARGS)
@@ -66,7 +66,7 @@ Datum url_out(PG_FUNCTION_ARGS)
 }
 
 /**
- * Macro mapping function Text -> URL
+ * Used for Casting Text -> URL
  */
 PG_FUNCTION_INFO_V1(text_to_url);
 Datum text_to_url(PG_FUNCTION_ARGS)
@@ -77,7 +77,7 @@ Datum text_to_url(PG_FUNCTION_ARGS)
 }
 
 /**
- * Macro mapping function URL -> Text
+ * Used for Casting URL -> Text
  */
 PG_FUNCTION_INFO_V1(url_to_text);
 Datum url_to_text(PG_FUNCTION_ARGS)
