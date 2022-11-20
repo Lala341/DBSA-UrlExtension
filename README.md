@@ -78,6 +78,11 @@
 | boolean | sameHost(URL url1, URL url2) | Y |     1      |
 | varchar | toString() | N |     2      |
 
+Abd -1
+Isa -2
+Jez -3
+Mir -4
+
 ### boolean equals(URL url1, URL url2) 
 > Compares two URLs for equality.  
 > URLs are equals if  
