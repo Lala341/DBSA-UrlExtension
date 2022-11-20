@@ -2,31 +2,10 @@
  * url PostgreSQL input/output function for bigint
  *
  */
-
-#include <stdio.h>
-#include "postgres.h"
-
-// #include "access/gist.h"
-// #include "access/skey.h"
-// #include "utils/elog.h"
-// #include "utils/palloc.h"
-// #include "utils/builtins.h"
-// #include "libpq/pqformat.h"
-// #include "utils/date.h"
-// #include "utils/datetime.h"
-// #include "utils/guc.h"
-// #include <sys/time.h>
-// #include <time.h>
-// #include <stdlib.h>
-// #include <ctype.h>
+#include "url.h";
 
 
-PG_MODULE_MAGIC;
-
-const unsigned int HTTPS = 443;
-const unsigned int HTTP = 8080;
-
-typedef struct
+static inline url* str_to_url(const char* str)
 {
     char protocol[5];
     char authority[50];
@@ -34,13 +13,6 @@ typedef struct
     char path[255];
     char query[255];
     char fragment[50];
-} url;
-
-static inline url* str_to_url(const char* str)
-{
-    char name[24];
-    int age;
-    float grade;
 
     if (sscanf(str, "( %s , %d , %f )", name, &age, &grade) != 3)
     {
@@ -62,7 +34,10 @@ static inline url* str_to_url(const char* str)
 
 static inline const char* url_to_str(const url* s)
 {
-    char * result = psprintf("( %s , %d , %f )", s->name, s->age, s->grade);
+    // TODO: Add check if the port is similar as protocol then don't print port, only print when it's not default
+
+    // TODO: Add check if query, fragment are not available then don't add
+    char * result = psprintf("%s://%s:%d/%s?%s#%s", u->protocol, u->authority, u->port, u->path, u->query, u->fragment);
     return result;
 }
 
