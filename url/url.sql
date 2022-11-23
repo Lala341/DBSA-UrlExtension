@@ -12,10 +12,6 @@ RETURNS cstring
 AS '$libdir/url'
 LANGUAGE C IMMUTABLE STRICT;
 
---url_recv
-
---url_send
-
 CREATE TYPE url (
 	INPUT          = url_in,
 	OUTPUT         = url_out,

@@ -1,6 +1,8 @@
-test.c
+# test.c
 *.exe
 *.o
+*.out
 .idea
 .vscode
+.vscode/*
 .DS_Store
