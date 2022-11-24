@@ -14,7 +14,7 @@
 typedef struct
 {
     char *protocol;
-    char *authority;
+    char *host;
     unsigned int port;
     char *path;
     char *query;
@@ -24,8 +24,8 @@ typedef struct
 
 URL url = {
     .protocol = "http", 
-    .authority = "",
-    .port = -1,
+    .host = "",
+    .port = 0,
     .query = "",
     .fragment = ""
 };
@@ -36,9 +36,14 @@ URL url = {
 void print(URL url) {
     if(url.protocol) 
         fprintf(stdout, "Protocol: %s\n", url.protocol);
-    if(url.authority) 
-        fprintf(stdout, "Authority: %s\n", url.authority);
+    if(url.host) 
+        fprintf(stdout, "Host: %s\n", url.host);
     fprintf(stdout, "Port: %d\n", url.port);
+    if(url.port > 0) {
+        fprintf(stdout, "Authority: %s:%d\n", url.host, url.port);
+    } else {
+        fprintf(stdout, "Authority: %s\n", url.host);
+    }
     if(url.path) 
         fprintf(stdout, "Path: %s\n", url.path);
     if(url.query) 
@@ -84,8 +89,8 @@ int main() {
 
     if( pmatch[2].rm_so >= 0) {
         len = pmatch[2].rm_eo - pmatch[2].rm_so;
-        url.authority = calloc( len + 1, sizeof(char));
-        strncpy(url.authority, str + pmatch[2].rm_so, pmatch[2].rm_eo - pmatch[2].rm_so);
+        url.host = calloc( len + 1, sizeof(char));
+        strncpy(url.host, str + pmatch[2].rm_so, pmatch[2].rm_eo - pmatch[2].rm_so);
     }
 
     if( pmatch[3].rm_so >= 0) {
