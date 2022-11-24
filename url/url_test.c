@@ -112,8 +112,8 @@ url * get_pointer_url(char *string_compare, char *string_regex){
 int main(  ) 
 {
 
-    const char *string_compare="https://example.com:3000/pathname/data/?search=test#hash";
-    const char *string_regex ="^(.*):\/\/([A-Za-z0-9\\-\\.]+):?([0-9]{2,4})?((\/[A-Za-z0-9]+)*)*\/?(\\?[A-Za-z0-9]+\=[A-Za-z0-9]+(\&[A-Za-z0-9]+\=[A-Za-z0-9]+)*)*(\#[A-Za-z0-9]+)*";
+    const char *string_compare="https://example.com:3000/pathname/data/some/thing/more/?search=test#hash";
+    const char *string_regex ="^(.*):\\/\\/([A-Za-z0-9\\-\\.]+):?([0-9]{2,4})?((\\/[A-Za-z0-9]+)*)*\\/?(\\?[A-Za-z0-9]+\\=[A-Za-z0-9]+(\\&[A-Za-z0-9]+\\=[A-Za-z0-9]+)*)*(\\#[A-Za-z0-9]+)*";
     //(^http[s])?:\/\/(www\.)?(.*)??\/?((.)*)
 
     int num_matches= get_num_matches_verify(string_compare, string_regex);
