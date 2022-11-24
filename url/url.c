@@ -87,7 +87,7 @@ static inline const char* url_to_str(const url* s)
         fprintf(stdout, "Host: %s\n", url.host);
     fprintf(stdout, "Port: %d\n", url.port);
     if(url.port > 0) {
-        url.authority = url.host + ":" + url.port;
+        sprintf(url.authority, "%s:%d", url.host,url.port);
         fprintf(stdout, "Authority: %s:%d\n", url.host, url.port);
     } else {
         url.authority = url.host
