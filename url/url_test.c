@@ -11,21 +11,31 @@ const unsigned int HTTP = 8080;
 typedef struct
 {
     char protocol[5];
-    char authority[50];
+    char host[50];
     unsigned int port;
     char path[255];
     char query[255];
-    char fragment[50];
+    char fragment[255];
 } url;
 
+void print_url_struct(url *s){
 
-int get_substring_matches(char *string_compare, char *string_regex){
+    printf("The value of s->protocol is: %s\n", s->protocol);
+    printf("The value of s->host is: %s\n", s->host);
+    printf("The value of s->port is: %d\n", s->port);
+    printf("The value of s->path is: %s\n", s->path);
+    printf("The value of s->query is: %s\n", s->query);
+    printf("The value of s->fragment is: %s\n", s->fragment);
+
+}
+int get_num_matches_verify(char *string_compare, char *string_regex){
     regex_t regex;
     /*Create regex*/
     if ( regcomp(&regex, string_regex, REG_EXTENDED) != 0 )
     {
         printf( "Creation regex failed");
         return 0;
+        
     }
     /* Compare and print subexpressions */
     fprintf( stdout, "Subexpressions number: %zu\n", regex.re_nsub );
@@ -36,10 +46,40 @@ int get_substring_matches(char *string_compare, char *string_regex){
      if ( ( ret = regexec( &regex, string_compare, match_count, pointer_match, 0)) != 0 )
     {
         printf("Does not match\n" );
+        return 0;
     }
     else
     {
         fprintf( stdout, "Sucessful match\n" );
+        return match_count ;
+      
+    }
+}
+url * get_pointer_url(char *string_compare, char *string_regex){
+    regex_t regex;
+    /*Create regex*/
+    url *s = (url*) malloc( sizeof(url) );
+            
+    if ( regcomp(&regex, string_regex, REG_EXTENDED) != 0 )
+    {
+        printf( "Creation regex failed");
+        
+    }
+    /* Compare and print subexpressions */
+    fprintf( stdout, "Subexpressions number: %zu\n", regex.re_nsub );
+    size_t match_count = regex.re_nsub + 1;
+    regmatch_t pointer_match[match_count];
+
+    int ret;
+     if ( ( ret = regexec( &regex, string_compare, match_count, pointer_match, 0)) != 0 )
+    {
+        printf("Does not match\n" );
+        
+    }
+    else
+    {
+        fprintf( stdout, "Sucessful match\n" );
+
         for ( size_t i = 0; i < match_count; i++ )
         {
             if ( pointer_match[i].rm_so >= 0 )
@@ -50,16 +90,56 @@ int get_substring_matches(char *string_compare, char *string_regex){
                     (int) ( pointer_match[i].rm_eo - pointer_match[i].rm_so ),
                     (int) ( pointer_match[i].rm_eo - pointer_match[i].rm_so ),
                     string_compare + pointer_match[i].rm_so );
+
+
+                   
             }
+
         }
+            int star_p=(int) pointer_match[1].rm_so;
+            int term_p=(int) pointer_match[1].rm_eo;
+            strncpy(s->protocol, string_compare+star_p, term_p);
+
+            star_p=(int) pointer_match[2].rm_so;
+            term_p=(int) pointer_match[2].rm_eo;
+            strncpy(s->host, string_compare+star_p, term_p);
+            
+            star_p=(int) pointer_match[3].rm_so;
+            term_p=(int) pointer_match[3].rm_eo;
+            char *port = calloc( (term_p-star_p)+ 1, sizeof(char));
+            strncpy(port, string_compare+star_p, term_p);
+            s.port = atoi(port);
+
+            star_p=(int) pointer_match[4].rm_so;
+            term_p=(int) pointer_match[4].rm_eo;
+            strncpy(s->path, string_compare+star_p, term_p);
+
+            star_p=(int) pointer_match[6].rm_so;
+            term_p=(int) pointer_match[6].rm_eo;
+            strncpy(s->query, string_compare+star_p, term_p);
+
+            print_url_struct(s);
+
+        
     }
-    return 0;
+    return s;
 }
+
 int main(  ) 
 {
 
-    const char *string_compare="http://example.com:3000/pathname/?search=test#hash";
-    const char *string_regex ="(http[s]?:\/\/)?([^\/\s]+\/)(.*)";
-    get_substring_matches(string_compare, string_regex);
+    const char *string_compare="https://example.com:3000/pathname/data/?search=test#hash";
+    const char *string_regex ="^(.*)://([A-Za-z0-9\\-\\.]+):?([0-9]{4})?((/[A-Za-z0-9\\-\\.]*)+)/?(\\?\\[A-Za-z0-9]=[A-Za-z0-9][&[A-Za-z0-9]=[A-Za-z0-9]]*)*#?([A-Za-z0-9\\-\\.])*(.*)$";
+    //(http[s]?):\/\/?([^\/\s]+)\/(.*)
+    //(^http[s])?:\/\/(www\.)?(.*)??\/?((.)*)
+
+    int num_matches= get_num_matches_verify(string_compare, string_regex);
+    
+    if(num_matches>0){
+        url *s= get_pointer_url(string_compare, string_regex);
+    }
+
     return 0;
+     // PG_RETURN_POINTER( get_pointer_url( str ) );
+
 }
