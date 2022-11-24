@@ -100,23 +100,7 @@ url * get_pointer_url(char *string_compare, char *string_regex){
             int term_p=(int) pointer_match[1].rm_eo;
             strncpy(s->protocol, string_compare+star_p, term_p);
 
-            star_p=(int) pointer_match[2].rm_so;
-            term_p=(int) pointer_match[2].rm_eo;
-            strncpy(s->host, string_compare+star_p, term_p);
             
-            star_p=(int) pointer_match[3].rm_so;
-            term_p=(int) pointer_match[3].rm_eo;
-            char *port = calloc( (term_p-star_p)+ 1, sizeof(char));
-            strncpy(port, string_compare+star_p, term_p);
-            s.port = atoi(port);
-
-            star_p=(int) pointer_match[4].rm_so;
-            term_p=(int) pointer_match[4].rm_eo;
-            strncpy(s->path, string_compare+star_p, term_p);
-
-            star_p=(int) pointer_match[6].rm_so;
-            term_p=(int) pointer_match[6].rm_eo;
-            strncpy(s->query, string_compare+star_p, term_p);
 
             print_url_struct(s);
 
@@ -129,8 +113,7 @@ int main(  )
 {
 
     const char *string_compare="https://example.com:3000/pathname/data/?search=test#hash";
-    const char *string_regex ="^(.*)://([A-Za-z0-9\\-\\.]+):?([0-9]{4})?((/[A-Za-z0-9\\-\\.]*)+)/?(\\?\\[A-Za-z0-9]=[A-Za-z0-9][&[A-Za-z0-9]=[A-Za-z0-9]]*)*#?([A-Za-z0-9\\-\\.])*(.*)$";
-    //(http[s]?):\/\/?([^\/\s]+)\/(.*)
+    const char *string_regex ="^(.*):\/\/([A-Za-z0-9\\-\\.]+):?([0-9]{2,4})?((\/[A-Za-z0-9]+)*)*\/?(\\?[A-Za-z0-9]+\=[A-Za-z0-9]+(\&[A-Za-z0-9]+\=[A-Za-z0-9]+)*)*(\#[A-Za-z0-9]+)*";
     //(^http[s])?:\/\/(www\.)?(.*)??\/?((.)*)
 
     int num_matches= get_num_matches_verify(string_compare, string_regex);
