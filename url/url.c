@@ -79,7 +79,8 @@ static inline url* str_to_url(const char* str)
 static inline const char* url_to_str(const url* s)
 {
     // TODO: Add check if the port is similar as protocol then don't print port, only print when it's not default
-
+char *authority;
+        
     // TODO: Add check if query, fragment are not available then don't add
     if(url.protocol) 
         fprintf(stdout, "Protocol: %s\n", url.protocol);
@@ -87,10 +88,10 @@ static inline const char* url_to_str(const url* s)
         fprintf(stdout, "Host: %s\n", url.host);
     fprintf(stdout, "Port: %d\n", url.port);
     if(url.port > 0) {
-        sprintf(url.authority, "%s:%d", url.host,url.port);
+        sprintf(authority, "%s:%s", url.host,url.port);
         fprintf(stdout, "Authority: %s:%d\n", url.host, url.port);
     } else {
-        url.authority = url.host
+        sprintf(authority, "%s", url.host);
         fprintf(stdout, "Authority: %s\n", url.host);
     }
     if(url.path) 
@@ -100,7 +101,7 @@ static inline const char* url_to_str(const url* s)
     if(url.fragment) 
         fprintf(stdout, "Fragment: %s\n", url.fragment);
 
-    char * result = psprintf("%s://%s/%s?%s#%s", u->protocol, u->authority, u->path, u->query, "#" + u->fragment);
+    char * result = psprintf("%s://%s/%s?%s#%s", u->protocol, authority, u->path, u->query, "#" + u->fragment);
     return result;
 }
 
