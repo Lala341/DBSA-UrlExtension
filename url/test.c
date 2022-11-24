@@ -1,15 +1,4 @@
 #include "utils.h"
-#include <regex.h>
-
-// typedef struct
-// {
-//     char protocol[5];
-//     char authority[50];
-//     unsigned int port;
-//     char path[255];
-//     char query[255];
-//     char fragment[50];
-// } url;
 
 typedef struct
 {
@@ -96,14 +85,6 @@ const char* url_to_str(URL * url)
     return result;
 }
 
-char * extractStr(regmatch_t pmatch, const char *str) {
-    int len = pmatch.rm_eo - pmatch.rm_so;
-    char *dest = calloc( len + 1, sizeof(char));
-    // Copy the url from regex find_start till find_end
-    strncpy(dest, str + pmatch.rm_so, pmatch.rm_eo - pmatch.rm_so);
-    return dest;
-}
-
 int main() {
 
     const char * str = "https://www.google.com:8080/search/thing/that?q=32&34%%20#subfragment";
@@ -140,45 +121,6 @@ int main() {
     // Path
     url.path = extractStr(pmatch[4], str);
     url.query = extractStr(pmatch[6], str);
-
-
-    // if( pmatch[1].rm_so >= 0) {
-    //     len = pmatch[1].rm_eo - pmatch[1].rm_so;
-    //     url.protocol = calloc( len + 1, sizeof(char));
-    //     // Copy the url from regex find_start till find_end
-    //     strncpy(url.protocol, str + pmatch[1].rm_so, pmatch[1].rm_eo);
-    //     // Remove the colon if any
-    //     removeChar(url.protocol, ':');
-    // }
-
-    // if( pmatch[2].rm_so >= 0) {
-    //     len = pmatch[2].rm_eo - pmatch[2].rm_so;
-    //     url.host = calloc( len + 1, sizeof(char));
-    //     strncpy(url.host, str + pmatch[2].rm_so, pmatch[2].rm_eo - pmatch[2].rm_so);
-    // }
-
-    // if( pmatch[3].rm_so >= 0) {
-    //     len = pmatch[3].rm_eo - pmatch[3].rm_so;
-    //     char *protocol_str = calloc( len + 1, sizeof(char));
-    //     strncpy(protocol_str, str + pmatch[3].rm_so, pmatch[3].rm_eo - pmatch[3].rm_so);
-    //     removeChar(protocol_str, ':');
-    //     // Cast to int
-    //     url.port = atoi(protocol_str);
-    // }
-
-    // if( pmatch[4].rm_so >= 0) {
-    //     len = pmatch[4].rm_eo - pmatch[4].rm_so;
-    //     url.path = calloc( len + 1, sizeof(char));
-    //     strncpy(url.path, str + pmatch[4].rm_so, pmatch[4].rm_eo - pmatch[4].rm_so);
-    //     // removeChar(protocol_str, '/');
-    // }
-
-    // if( pmatch[6].rm_so >= 0) {
-    //     len = pmatch[6].rm_eo - pmatch[6].rm_so;
-    //     url.query = calloc( len + 1, sizeof(char));
-    //     strncpy(url.query, str + pmatch[6].rm_so, pmatch[6].rm_eo - pmatch[6].rm_so);
-    //     removeChar(url.query, '?');
-    // }
     
     print(url);
     printf("\n");

@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-
+#include <regex.h>
 
 // char* replace(char* str, char find, char replace){
 //     char *current_pos = strchr(str,find);
@@ -27,4 +27,12 @@ void removeChar(char * str, char c){
             i--;
         }
     }
+}
+
+char * extractStr(regmatch_t pmatch, const char *str) {
+    int len = pmatch.rm_eo - pmatch.rm_so;
+    char *dest = calloc( len + 1, sizeof(char));
+    // Copy the url from regex find_start till find_end
+    strncpy(dest, str + pmatch.rm_so, pmatch.rm_eo - pmatch.rm_so);
+    return dest;
 }

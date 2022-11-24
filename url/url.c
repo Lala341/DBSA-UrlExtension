@@ -3,7 +3,6 @@
  *
  */
 #include "url.h";
-#include <regex.h>
 
 static inline url* str_to_url(const char* str)
 {
@@ -36,14 +35,26 @@ static inline url* str_to_url(const char* str)
     if (0 != (rc = regcomp(&rx, string_regex, REG_EXTENDED))) {
 
         regerror(rc, &rx, msg, 100);
-        printf("regcomp() failed, returning nonzero (%d), msg = %s\n", rc, msg);
+        ereport(
+            ERROR,
+            (
+                errcode(ERRCODE_INVALID_TEXT_REPRESENTATION),
+                errmsg("Internal REGEX error in URL (Error Code: %d): \"%s\"", rc, msg)
+            )
+        );
         return -1;
     }
 
     size_t match_count = rx.re_nsub + 1;
 
     if (0 != (rc = regexec(&rx, spec, match_count, pmatch, 0))) {
-        printf("Failed to match '%s' with pattern ,returning %d.\n", spec, rc);
+        ereport(
+            ERROR,
+            (
+                errcode(ERRCODE_INVALID_TEXT_REPRESENTATION),
+                errmsg("Invalid URL pattern provided (Error Code: %d): \"%s\"", rc, spec)
+            )
+        );
     }
 
     int len = 0;
@@ -79,8 +90,8 @@ static inline url* str_to_url(const char* str)
 static inline const char* url_to_str(const url* s)
 {
     // TODO: Add check if the port is similar as protocol then don't print port, only print when it's not default
-char *authority;
-        
+    char *authority;
+    char * result;
     // TODO: Add check if query, fragment are not available then don't add
     if(url.protocol) 
         fprintf(stdout, "Protocol: %s\n", url.protocol);
@@ -88,20 +99,26 @@ char *authority;
         fprintf(stdout, "Host: %s\n", url.host);
     fprintf(stdout, "Port: %d\n", url.port);
     if(url.port > 0) {
-        sprintf(authority, "%s:%s", url.host,url.port);
+        sprintf(authority, "%s:%d", url.host,url.port);
         fprintf(stdout, "Authority: %s:%d\n", url.host, url.port);
     } else {
         sprintf(authority, "%s", url.host);
         fprintf(stdout, "Authority: %s\n", url.host);
     }
-    if(url.path) 
+    sprintf(result, "%s://%s", url.protocol, authority);
+    if(url.path) {
+        sprintf(result, "%s/%s", result, url.path);
         fprintf(stdout, "Path: %s\n", url.path);
-    if(url.query) 
+    }
+    if(url.query) {
+        sprintf(result, "%s?%s", result, url.query);
         fprintf(stdout, "Query: %s\n", url.query);
-    if(url.fragment) 
+    }
+    if(url.fragment){ 
+        sprintf(result, "%s#%s", result, url.fragment);
         fprintf(stdout, "Fragment: %s\n", url.fragment);
-
-    char * result = psprintf("%s://%s/%s?%s#%s", u->protocol, authority, u->path, u->query, "#" + u->fragment);
+    }
+    // char * result = psprintf("%s", result);
     return result;
 }
 
