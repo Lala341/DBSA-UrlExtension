@@ -5,7 +5,6 @@
 
 #include <stdio.h>
 #include "utils.h"
-#include "postgres.h"
 #include "fmgr.h"
 
 // #include "access/gist.h"
@@ -30,10 +29,20 @@ const unsigned int HTTP = 8080;
 
 typedef struct
 {
-    char *protocol;
-    char *host;
+    char protocol[FLEXIBLE_ARRAY_MEMBER];
+    char host[FLEXIBLE_ARRAY_MEMBER];
     unsigned int port;
-    char *path;
-    char *query;
-    char *fragment;
+    char path[FLEXIBLE_ARRAY_MEMBER];
+    char query[FLEXIBLE_ARRAY_MEMBER];
+    char fragment[FLEXIBLE_ARRAY_MEMBER];
 } URL;
+
+// typedef struct
+// {
+//     char *protocol;
+//     char *host;
+//     unsigned int port;
+//     char *path;
+//     char *query;
+//     char *fragment;
+// } URL;

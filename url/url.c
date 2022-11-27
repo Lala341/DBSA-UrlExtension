@@ -4,8 +4,14 @@
  */
 #include "url.h"
 
-static inline URL* str_to_url(const char* str)
-{
+/**
+ * Constructor of URL
+ */
+PG_FUNCTION_INFO_V1(url_in);
+
+Datum url_in(PG_FUNCTION_ARGS){
+    char *str = PG_GETARG_CSTRING(0);
+
     char spec[200];
 
     if (sscanf(str, "(%s)", spec) != 1)
@@ -17,13 +23,12 @@ static inline URL* str_to_url(const char* str)
         );
     }
 
-    URL url = {
-        .protocol = "http", 
-        .host = "",
-        .port = 0,
-        .query = "",
-        .fragment = ""
-    };
+    URL * url = (URL *) palloc( sizeof(URL) );
+    url->protocol = "http";
+    url->host = "";
+    url->port = 0;
+    url->query = "";
+    url->fragment = "";
 
     regex_t rx;
     int rc;
@@ -55,76 +60,23 @@ static inline URL* str_to_url(const char* str)
         );
     }
 
-    url.protocol = extractStr(pmatch[1], str);
-    removeChar(url.protocol, ':');
-    url.host = extractStr(pmatch[2], str);
+    url->protocol = extractStr(pmatch[1], str);
+    removeChar(url->protocol, ':');
+    url->host = extractStr(pmatch[2], str);
     // Protocol
     char *protocol_str = extractStr(pmatch[3], str);
     removeChar(protocol_str, ':');
     // Cast to int
-    url.port = atoi(protocol_str);
+    url->port = atoi(protocol_str);
     // Path
-    url.path = extractStr(pmatch[4], str);
+    url->path = extractStr(pmatch[4], str);
     char *query_str = extractStr(pmatch[6], str);
     removeChar(query_str, '?');
-    url.query = query_str;
+    url->query = query_str;
     
 
-    // URL * s = (URL *) palloc( sizeof(URL) );
-
-    return url;
-}
-
-static inline const char* url_to_str(const URL* url)
-{
-    char *authority = calloc(50, sizeof(char));
-    char *result = calloc(100, sizeof(char));
-    
-    // if(url->protocol) 
-    //     fprintf(stdout, "Protocol: %s\n", url->protocol);
-    // if(url->host) 
-    //     fprintf(stdout, "Host: %s\n", url->host);
-    // fprintf(stdout, "Port: %d\n", url->port);
-    if(url->port > 0) {
-        sprintf(authority, "%s:%d", url->host,url->port);
-        // fprintf(stdout, "Authority: %s:%d\n", url->host, url->port);
-    } else {
-        sprintf(authority, "%s", url->host);
-        // fprintf(stdout, "Authority: %s\n", url->host);
-    }
-    sprintf(result, "%s://%s", url->protocol, authority);
-    // strcat(result, url->protocol);
-        // strcat(result, "://");
-    // strcat(result, authority);
-    // fprintf(stdout, "result with protocol: %s\n", result);
-    if(url->path) {
-        strcat(result, url->path);
-        // fprintf(stdout, "Path: %s\n", url->path);
-    }
-    if(url->query != "") {
-        char * temp = result;
-        sprintf(result, "%s?%s", temp, url->query);
-        // fprintf(stdout, "Query: %s\n", url->query);
-    }
-    if(url->fragment != ""){ 
-        char * temp = result;
-        sprintf(result, "#%s", url->fragment);
-        // fprintf(stdout, "Fragment: %s\n", url->fragment);
-    }
-    // fprintf(stdout, "result with fragment: %s\n", result);
-    // char * result = psprintf("%s", result);
-    return result;
-
-}
-
-/**
- * Constructor of URL
- */
-PG_FUNCTION_INFO_V1(url_in);
-Datum url_in(PG_FUNCTION_ARGS){
-    char *str = PG_GETARG_CSTRING(0);
-    PG_RETURN_TEXT_P( str_to_url(str));
-    // PG_RETURN_POINTER( str_to_url( str ) );
+    // PG_RETURN_TEXT_P( &url );
+    PG_RETURN_POINTER( url );
 }   
 
 /**
@@ -133,12 +85,54 @@ Datum url_in(PG_FUNCTION_ARGS){
 PG_FUNCTION_INFO_V1(url_out);
 Datum url_out(PG_FUNCTION_ARGS)
 {
-    // Datum arg = PG_GETARG_DATUM(0);
+    
+    const URL *url = (URL *) PG_GETARG_POINTER(0);
 
-	// PG_RETURN_CSTRING( url_to_str() );
-    const URL *s = (URL *) PG_GETARG_POINTER(0);
-    PG_RETURN_CSTRING( url_to_str(s) );
+    // char *authority = palloc0(50 * sizeof(char));
+    // char *result = palloc0(100 * sizeof(char));
+    // 
+    // // if(url->protocol) 
+    // //     fprintf(stdout, "Protocol: %s\n", url->protocol);
+    // // if(url->host) 
+    // //     fprintf(stdout, "Host: %s\n", url->host);
+    // // fprintf(stdout, "Port: %d\n", url->port);
+    // if(url->port > 0) {
+    //     psprintf(authority, "%s:%d", url->host,url->port);
+    //     // fprintf(stdout, "Authority: %s:%d\n", url->host, url->port);
+    // } else {
+    //     psprintf(authority, "%s", url->host);
+    //     // fprintf(stdout, "Authority: %s\n", url->host);
+    // }
+    // psprintf(result, "%s://%s", url->protocol, authority);
+    // // strcat(result, url->protocol);
+    //     // strcat(result, "://");
+    // // strcat(result, authority);
+    // // fprintf(stdout, "result with protocol: %s\n", result);
+    // if(url->path) {
+    //     strcat(result, url->path);
+    //     // fprintf(stdout, "Path: %s\n", url->path);
+    // }
+    // if(url->query != "") {
+    //     char * temp = result;
+    //     psprintf(result, "%s?%s", temp, url->query);
+    //     // fprintf(stdout, "Query: %s\n", url->query);
+    // }
+    // if(url->fragment != ""){ 
+    //     char * temp = result;
+    //     psprintf(result, "#%s", url->fragment);
+    //     // fprintf(stdout, "Fragment: %s\n", url->fragment);
+    // }
+    // // fprintf(stdout, "result with fragment: %s\n", result);
+    // // char * result = psprintf("%s", result);
+
+    // // Datum arg = PG_GETARG_DATUM(0);
+
+	// // PG_RETURN_CSTRING( url_to_str() );
+    char * result = psprintf("%s://%s:%d/%s#%s", url->protocol, url->host,url->port, url->query, url->fragment);
+    PG_RETURN_CSTRING( result );
+
 }
+
 
 /**
  * Used for Casting Text -> URL
