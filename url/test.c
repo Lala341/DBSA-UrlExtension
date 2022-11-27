@@ -120,7 +120,9 @@ int main() {
     url.port = atoi(protocol_str);
     // Path
     url.path = extractStr(pmatch[4], str);
-    url.query = extractStr(pmatch[6], str);
+    char *query_str = extractStr(pmatch[6], str);
+    removeChar(query_str, '?');
+    url.query = query_str;
     
     print(url);
     printf("\n");

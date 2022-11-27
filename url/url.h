@@ -4,7 +4,9 @@
  */
 
 #include <stdio.h>
+#include "utils.h"
 #include "postgres.h"
+#include "fmgr.h"
 
 // #include "access/gist.h"
 // #include "access/skey.h"
