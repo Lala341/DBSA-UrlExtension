@@ -32,8 +32,14 @@ void removeChar(char * str, char c){
 
 char * extractStr(regmatch_t pmatch, const char *str) {
     int len = pmatch.rm_eo - pmatch.rm_so;
-    char *dest = palloc0( (len + 1) * sizeof(char));
+
+    // size_t size = VARSIZE(str);
+    // text *destination = (text *) palloc(VARHDRSZ + size);
+    char *dest = (char *) palloc0( (VARHDRSZ + len + 1) * sizeof(char));
+    SET_VARSIZE(dest, VARHDRSZ + len + 1);
+
     // Copy the url from regex find_start till find_end
     strncpy(dest, str + pmatch.rm_so, pmatch.rm_eo - pmatch.rm_so);
+    // dest[len + 1] = 0;
     return dest;
 }

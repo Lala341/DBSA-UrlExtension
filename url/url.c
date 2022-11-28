@@ -3,6 +3,9 @@
  *
  */
 #include "url.h"
+#include "executor/executor.h"
+#include "utils/builtins.h"
+#include "utils/datum.h"
 
 /**
  * Constructor of URL
@@ -10,9 +13,38 @@
 PG_FUNCTION_INFO_V1(url_in);
 
 Datum url_in(PG_FUNCTION_ARGS){
-    char *str = PG_GETARG_CSTRING(0);
 
-    char spec[200];
+    // HeapTupleHeader  t = PG_GETARG_HEAPTUPLEHEADER(0);
+    // bool is_protocol_null, is_domain_null;
+    // Datum protocol, domain;
+
+    // protocol = GetAttributeByName(t, "protocol", &is_protocol_null);
+    // domain = GetAttributeByName(t, "domain", &is_domain_null);
+
+    // char *protocol = NULL, *domain = NULL, *port = NULL;
+    // if (!PG_ARGISNULL(1)) protocol = TextDatumGetCString(PG_GETARG_DATUM(1));
+    // if (!PG_ARGISNULL(2)) domain = TextDatumGetCString(PG_GETARG_DATUM(2));
+    // if (!PG_ARGISNULL(3)) port = TextDatumGetCString(PG_GETARG_DATUM(3));
+
+
+    // ereport(
+    //     ERROR,
+    //     (errcode(ERRCODE_INVALID_TEXT_REPRESENTATION),
+    //     errmsg("No %s, %s, %s", protocol, domain, port))
+    // );
+
+        
+    // text* str = PG_GETARG_TEXT_P(0);
+    char *str = PG_GETARG_CSTRING(0);
+    size_t arg_len = VARSIZE(str) - VARHDRSZ;
+    char *spec = palloc0((arg_len + 1) * sizeof(char));
+
+    // size_t size = VARSIZE(str);
+    // text *destination = (text *) palloc(VARHDRSZ + size);
+    // destination->length = VARHDRSZ + size;
+    // memcpy(destination->data, buffer, 40);
+
+
 
     if (sscanf(str, "(%s)", spec) != 1)
     {
@@ -23,6 +55,7 @@ Datum url_in(PG_FUNCTION_ARGS){
         );
     }
 
+    // URL * url = (URL *) palloc(VARHDRSZ sizeof(URL) );
     URL * url = (URL *) palloc( sizeof(URL) );
     url->protocol = "http";
     url->host = "";
@@ -73,7 +106,6 @@ Datum url_in(PG_FUNCTION_ARGS){
     char *query_str = extractStr(pmatch[6], str);
     removeChar(query_str, '?');
     url->query = query_str;
-    
 
     // PG_RETURN_TEXT_P( &url );
     PG_RETURN_POINTER( url );

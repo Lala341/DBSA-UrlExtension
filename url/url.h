@@ -27,22 +27,22 @@ PG_MODULE_MAGIC;
 const unsigned int HTTPS = 443;
 const unsigned int HTTP = 8080;
 
-typedef struct
-{
-    char protocol[FLEXIBLE_ARRAY_MEMBER];
-    char host[FLEXIBLE_ARRAY_MEMBER];
-    unsigned int port;
-    char path[FLEXIBLE_ARRAY_MEMBER];
-    char query[FLEXIBLE_ARRAY_MEMBER];
-    char fragment[FLEXIBLE_ARRAY_MEMBER];
-} URL;
-
 // typedef struct
 // {
-//     char *protocol;
-//     char *host;
+//     char protocol[FLEXIBLE_ARRAY_MEMBER];
+//     char host[FLEXIBLE_ARRAY_MEMBER];
 //     unsigned int port;
-//     char *path;
-//     char *query;
-//     char *fragment;
+//     char path[FLEXIBLE_ARRAY_MEMBER];
+//     char query[FLEXIBLE_ARRAY_MEMBER];
+//     char fragment[FLEXIBLE_ARRAY_MEMBER];
 // } URL;
+
+typedef struct
+{
+    char *protocol;
+    char *host;
+    unsigned int port;
+    char *path;
+    char *query;
+    char *fragment;
+} URL;
