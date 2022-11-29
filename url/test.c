@@ -1,4 +1,16 @@
-#include "utils.h"
+// #include "utils.h"
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include <regex.h>
+// #include "postgres.h"
+
+#ifndef __cplusplus
+typedef unsigned char bool;
+static const bool false = 0;
+static const bool true = 1;
+#endif
+
 
 typedef struct
 {
@@ -18,6 +30,56 @@ URL url = {
     .query = "",
     .fragment = ""
 };
+
+char * extractStr(regmatch_t pmatch, const char *str) {
+    int len = pmatch.rm_eo - pmatch.rm_so;
+    char *dest = calloc( (len + 1), sizeof(char));
+    // Copy the url from regex find_start till find_end
+    strncpy(dest, str + pmatch.rm_so, pmatch.rm_eo - pmatch.rm_so);
+    // memset(dest, )
+    // dest[len + 1] = 0;
+    return dest;
+}
+
+bool isSpecialChar(char c) {
+    return (c == '\'' || c == '"' || c == '(' || c == ')' || c == ' ');
+}
+
+int countSpecialChars(char * str){
+    int i, count = 0;
+    int len = strlen(str);
+    for(i=0; i<len; i++)
+        if(isSpecialChar(str[i]))
+            count++;
+    return count;
+}
+
+int countChar(char * str, char c){
+    int i, count = 0;
+    int len = strlen(str);
+    for(i=0; i<len; i++)
+        if(str[i] == c) count++;
+    return count;
+}
+
+char * stripQuotes(char * str){
+    int i, j = 0;
+    int len = strlen(str);
+    int spChar = countSpecialChars(str);
+    if(spChar == 0)
+        return str;
+    char* result = malloc(sizeof(char) * (len - spChar));
+    for(i=0; i<len; i++)
+    {
+        if(!isSpecialChar(str[i])) {
+            result[j++] = str[i];
+        }
+    }
+    if(j < len) {
+        result[j] = '\0';
+    }
+    return result;
+}
 
 /**
  * Print utility function
@@ -85,9 +147,34 @@ const char* url_to_str(URL * url)
     return result;
 }
 
+char * removeChar(char * str, char c){
+    int i, j = 0;
+    int len = strlen(str);
+    int spChar = countChar(str, c);
+    if(spChar == 0)
+        return str;
+    char* result = malloc(sizeof(char) * (len - spChar));
+    for(i=0; i<len; i++)
+    {
+        if(str[i] != c) {
+            result[j++] = str[i];
+        }
+    }
+    if(j < len) {
+        result[j] = '\0';
+    }
+    return result;
+}
+
 int main() {
 
     const char * str = "https://www.google.com:8080/search/thing/that?q=32&34%%20#subfragment";
+
+    char * qc = "  \"https://www.google.com:8080/search/thing/that?q=32&34%%20#subfragment'";
+    int lqc = strlen(qc);
+    char *r = stripQuotes(qc); 
+    int rqc = strlen(r);
+    printf("%d:: %s :: %d", lqc, r, rqc);
 
     regex_t rx;
     int rc;
@@ -111,17 +198,17 @@ int main() {
     }
 
     url.protocol = extractStr(pmatch[1], str);
-    removeChar(url.protocol, ':');
+    url.protocol = removeChar(url.protocol, ':');
     url.host = extractStr(pmatch[2], str);
     // Protocol
     char *protocol_str = extractStr(pmatch[3], str);
-    removeChar(protocol_str, ':');
+    protocol_str = removeChar(protocol_str, ':');
     // Cast to int
     url.port = atoi(protocol_str);
     // Path
     url.path = extractStr(pmatch[4], str);
     char *query_str = extractStr(pmatch[6], str);
-    removeChar(query_str, '?');
+    query_str = removeChar(query_str, '?');
     url.query = query_str;
     
     print(url);

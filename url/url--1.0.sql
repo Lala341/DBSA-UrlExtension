@@ -1,7 +1,7 @@
 -- complain if script is sourced in psql, rather than via CREATE EXTENSION
 \echo Use "CREATE EXTENSION url" to load this file. \quit
 
-CREATE OR REPLACE FUNCTION url_in(cstring, cstring, integer)
+CREATE OR REPLACE FUNCTION url_in(cstring)
 RETURNS url
 AS '$libdir/url'
 LANGUAGE C IMMUTABLE STRICT;

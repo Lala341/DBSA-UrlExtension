@@ -36,8 +36,8 @@ Datum url_in(PG_FUNCTION_ARGS){
         
     // text* str = PG_GETARG_TEXT_P(0);
     char *str = PG_GETARG_CSTRING(0);
-    size_t arg_len = VARSIZE(str) - VARHDRSZ;
-    char *spec = palloc0((arg_len + 1) * sizeof(char));
+    // size_t arg_len = VARSIZE(str) + VARHDRSZ;
+    char *raw = palloc0((strlen(str) + 1) * sizeof(char));
 
     // size_t size = VARSIZE(str);
     // text *destination = (text *) palloc(VARHDRSZ + size);
@@ -46,7 +46,7 @@ Datum url_in(PG_FUNCTION_ARGS){
 
 
 
-    if (sscanf(str, "(%s)", spec) != 1)
+    if (sscanf(str, "( %s )", raw) != 1)
     {
         ereport(
             ERROR,
@@ -54,8 +54,10 @@ Datum url_in(PG_FUNCTION_ARGS){
             errmsg("Invalid input syntax for type 'URL': \"%s\"", str))
         );
     }
+    // Remove quotes and special char
+    char *spec = stripString(raw);
+    pfree(raw);
 
-    // URL * url = (URL *) palloc(VARHDRSZ sizeof(URL) );
     URL * url = (URL *) palloc( sizeof(URL) );
     url->protocol = "http";
     url->host = "";
@@ -65,7 +67,7 @@ Datum url_in(PG_FUNCTION_ARGS){
 
     regex_t rx;
     int rc;
-    regmatch_t pmatch[2];
+    regmatch_t pmatch[8];
     char msg[100];
     const char *string_regex ="^(.*):\\/\\/([A-Za-z0-9\\-\\.]+):?([0-9]{2,4})?((\\/[A-Za-z0-9]+)*)*\\/?(\\?[A-Za-z0-9]+\\=[A-Za-z0-9]+(\\&[A-Za-z0-9]+\\=[A-Za-z0-9]+)*)*(\\#[A-Za-z0-9]+)*";
 
@@ -93,19 +95,32 @@ Datum url_in(PG_FUNCTION_ARGS){
         );
     }
 
-    url->protocol = extractStr(pmatch[1], str);
-    removeChar(url->protocol, ':');
-    url->host = extractStr(pmatch[2], str);
     // Protocol
-    char *protocol_str = extractStr(pmatch[3], str);
-    removeChar(protocol_str, ':');
+    url->protocol = extractStr(pmatch[1], spec);
+    url->protocol = removeChar(url->protocol, ':');
+    url->host = extractStr(pmatch[2], spec);
+    // Port
+    char *port_str = extractStr(pmatch[3], spec);
+    port_str = removeChar(port_str, ':');
     // Cast to int
-    url->port = atoi(protocol_str);
+    url->port = atoi(port_str);
     // Path
-    url->path = extractStr(pmatch[4], str);
-    char *query_str = extractStr(pmatch[6], str);
-    removeChar(query_str, '?');
+    url->path = extractStr(pmatch[4], spec);
+    char *query_str = extractStr(pmatch[6], spec);
+    query_str = removeChar(query_str, '?');
     url->query = query_str;
+
+    // ereport(
+    //         ERROR,
+    //         (errcode(ERRCODE_INVALID_TEXT_REPRESENTATION),
+    //         errmsg("Reg: [1]%3lu,%3lu = [2]%3lu,%3lu = [3]%3lu,%3lu", (unsigned long) pmatch[1].rm_so, (unsigned long) pmatch[1].rm_eo, (unsigned long) pmatch[2].rm_so, (unsigned long) pmatch[2].rm_eo, (unsigned long) pmatch[3].rm_so, (unsigned long) pmatch[3].rm_eo))
+    //     );
+    
+    // ereport(
+    //         ERROR,
+    //         (errcode(ERRCODE_INVALID_TEXT_REPRESENTATION),
+    //         errmsg("size (%d) Output: %s || %s || %d || %s || %s", PG_NARGS(), spec, url->protocol, url->port, url->path, url->query))
+    //     );
 
     // PG_RETURN_TEXT_P( &url );
     PG_RETURN_POINTER( url );
