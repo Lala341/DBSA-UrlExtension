@@ -4,7 +4,9 @@
  */
 
 #include <stdio.h>
-#include "utils.h"
+#include <string.h>
+#include <stdlib.h>
+#include "postgres.h"
 #include "fmgr.h"
 
 PG_MODULE_MAGIC;
@@ -20,4 +22,4 @@ typedef struct
     char *path;
     char *query;
     char *fragment;
-} URL;
+} TESTURL;

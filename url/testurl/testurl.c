@@ -4,9 +4,9 @@
  */
 #include "testurl.h"
 
-URL * url_constructor_spec(char* str){
+TESTURL * url_constructor_spec(char* str){
 
-    URL * url = (URL *) palloc( sizeof(URL) );
+    TESTURL * url = (TESTURL *) palloc( sizeof(TESTURL) );
     url->protocol = "https";
     url->host = "stackoverflow.com";
     url->port = 8080;
@@ -17,7 +17,7 @@ URL * url_constructor_spec(char* str){
 }   
 
 
-static inline char* url_to_str(const URL * url)
+static inline char* url_to_str(const TESTURL * url)
 {
     char * result = psprintf("%s://%s:%d/%s#%s", url->protocol, url->host,url->port, url->query, url->fragment);
     return result;
@@ -38,6 +38,6 @@ Datum test_url_in(PG_FUNCTION_ARGS){
 PG_FUNCTION_INFO_V1(test_url_out);
 Datum test_url_out(PG_FUNCTION_ARGS)
 {
-    const URL *url = (URL *) PG_GETARG_POINTER(0);
+    const TESTURL *url = (TESTURL *) PG_GETARG_POINTER(0);
     PG_RETURN_CSTRING( url_to_str(url) );
 }
