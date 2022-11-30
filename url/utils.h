@@ -100,3 +100,10 @@ char * extractStr(regmatch_t pmatch, const char *str) {
     // dest[len + 1] = 0;
     return dest;
 }
+
+char * copyStr(const char *source) {
+    size_t len = strlen(source) + 1;
+    char *dest = (char *) palloc0( len * sizeof(char));
+    strncpy(dest, source, len);
+    return dest;
+}

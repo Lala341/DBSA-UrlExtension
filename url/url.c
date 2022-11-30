@@ -7,12 +7,7 @@
 #include "utils/builtins.h"
 #include "utils/datum.h"
 
-/**
- * Constructor of URL
- */
-PG_FUNCTION_INFO_V1(url_in);
-
-Datum url_in(PG_FUNCTION_ARGS){
+URL * url_constructor_spec(char* str){
 
     // HeapTupleHeader  t = PG_GETARG_HEAPTUPLEHEADER(0);
     // bool is_protocol_null, is_domain_null;
@@ -33,32 +28,27 @@ Datum url_in(PG_FUNCTION_ARGS){
     //     errmsg("No %s, %s, %s", protocol, domain, port))
     // );
 
-        
-    // text* str = PG_GETARG_TEXT_P(0);
-    char *str = PG_GETARG_CSTRING(0);
     // size_t arg_len = VARSIZE(str) + VARHDRSZ;
-    char *raw = palloc0((strlen(str) + 1) * sizeof(char));
+    // char *raw = palloc0((strlen(str) + 1) * sizeof(char));
 
     // size_t size = VARSIZE(str);
     // text *destination = (text *) palloc(VARHDRSZ + size);
     // destination->length = VARHDRSZ + size;
     // memcpy(destination->data, buffer, 40);
 
-
-
-    if (sscanf(str, "( %s )", raw) != 1)
-    {
-        ereport(
-            ERROR,
-            (errcode(ERRCODE_INVALID_TEXT_REPRESENTATION),
-            errmsg("Invalid input syntax for type 'URL': \"%s\"", str))
-        );
-    }
+    // if (sscanf(str, "( %s )", raw) != 1)
+    // {
+    //     ereport(
+    //         ERROR,
+    //         (errcode(ERRCODE_INVALID_TEXT_REPRESENTATION),
+    //         errmsg("Invalid input syntax for type 'URL': \"%s\"", str))
+    //     );
+    // }
     // Remove quotes and special char
-    char *spec = stripString(raw);
-    pfree(raw);
+    char *spec = stripString(str);
+    // pfree(raw);
 
-    URL * url = (URL *) palloc( sizeof(URL) );
+    URL * url = (URL *) palloc0( sizeof(URL) );
     url->protocol = "http";
     url->host = "";
     url->port = 0;
@@ -123,17 +113,34 @@ Datum url_in(PG_FUNCTION_ARGS){
     //     );
 
     // PG_RETURN_TEXT_P( &url );
-    PG_RETURN_POINTER( url );
+    return url;
 }   
 
-/**
- * Construct string from url -> toString
- */
-PG_FUNCTION_INFO_V1(url_out);
-Datum url_out(PG_FUNCTION_ARGS)
-{
+PG_FUNCTION_INFO_V1(url_constructor_port);
+Datum url_constructor_port(PG_FUNCTION_ARGS){
+
+    char *spec = NULL, *protocol = NULL, *host = NULL, *file = NULL;
+    int port = 0;
+    protocol = PG_GETARG_CSTRING(0);
+    host = PG_GETARG_CSTRING(1);
+    port = PG_GETARG_INT32(2);
+    file = PG_GETARG_CSTRING(3);
+
+    size_t size = VARHDRSZ + sizeof(URL);
+    URL * url = (URL *) palloc0( size );
+    SET_VARSIZE(url, size);
     
-    const URL *url = (URL *) PG_GETARG_POINTER(0);
+    url->protocol = copyStr(protocol);
+    url->host = copyStr(host);
+    url->port = port;
+    url->query = copyStr(file);
+    url->fragment = "";
+    
+    PG_RETURN_POINTER( url );
+}
+
+static inline char* url_to_str(const URL * url)
+{
 
     // char *authority = palloc0(50 * sizeof(char));
     // char *result = palloc0(100 * sizeof(char));
@@ -176,29 +183,69 @@ Datum url_out(PG_FUNCTION_ARGS)
 
 	// // PG_RETURN_CSTRING( url_to_str() );
     char * result = psprintf("%s://%s:%d/%s#%s", url->protocol, url->host,url->port, url->query, url->fragment);
-    PG_RETURN_CSTRING( result );
+    return result;
+}
 
+/**
+ * Constructor of URL
+ */
+PG_FUNCTION_INFO_V1(url_in);
+Datum url_in(PG_FUNCTION_ARGS){
+    switch(PG_NARGS()) {
+        char *spec = NULL, *protocol = NULL, *domain = NULL, *file = NULL;
+        int port = 0;
+        // case 4:
+        //     protocol = PG_GETARG_CSTRING(0);
+        //     domain = PG_GETARG_CSTRING(1);
+        //     port = PG_GETARG_INT32(2);
+        //     file = PG_GETARG_CSTRING(3);
+        //     PG_RETURN_POINTER( url_constructor_port(protocol, domain, port, file) );
+        //     break;
+        default:
+            spec = PG_GETARG_CSTRING(0);
+            PG_RETURN_POINTER( url_constructor_spec(spec) );
+    }
+}
+
+/**
+ * Construct string from url -> toString
+ */
+PG_FUNCTION_INFO_V1(url_out);
+Datum url_out(PG_FUNCTION_ARGS)
+{
+    
+    const URL *url = (URL *) PG_GETARG_POINTER(0);
+    PG_RETURN_CSTRING( url_to_str(url) );
+}
+
+
+PG_FUNCTION_INFO_V1(get_protocol);
+Datum get_protocol(PG_FUNCTION_ARGS)
+{
+    const URL *url = (URL *) PG_GETARG_POINTER(0);
+
+    PG_RETURN_CSTRING( url->protocol );
 }
 
 
 /**
  * Used for Casting Text -> URL
-//  */
-// PG_FUNCTION_INFO_V1(text_to_url);
-// Datum text_to_url(PG_FUNCTION_ARGS)
-// {
-//     text *txt = PG_GETARG_TEXT_P(0);
-//     char *str = DatumGetCString( DirectFunctionCall1(textout, PointerGetDatum(txt) ) );
-//     PG_RETURN_POINTER( str_to_url( str ) );
-// }
+ */
+PG_FUNCTION_INFO_V1(text_to_url);
+Datum text_to_url(PG_FUNCTION_ARGS)
+{
+    text *txt = PG_GETARG_TEXT_P(0);
+    char *str = DatumGetCString( DirectFunctionCall1(textout, PointerGetDatum(txt) ) );
+    PG_RETURN_POINTER( url_constructor_spec( str ) );
+}
 
 /**
  * Used for Casting URL -> Text
  */
-// PG_FUNCTION_INFO_V1(url_to_text);
-// Datum url_to_text(PG_FUNCTION_ARGS)
-// {
-//     const URL *s = (URL *) PG_GETARG_POINTER(0);    
-//     text *out = (text *) DirectFunctionCall1(textin, PointerGetDatum( url_to_str(s) ) );
-//     PG_RETURN_TEXT_P(out);
-// }
+PG_FUNCTION_INFO_V1(url_to_text);
+Datum url_to_text(PG_FUNCTION_ARGS)
+{
+    const URL *s = (URL *) PG_GETARG_POINTER(0);    
+    text *out = (text *) DirectFunctionCall1(textin, PointerGetDatum( url_to_str(s) ) );
+    PG_RETURN_TEXT_P(out);
+}

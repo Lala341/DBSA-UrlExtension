@@ -81,6 +81,13 @@ char * stripQuotes(char * str){
     return result;
 }
 
+char * copyStr(const char *source) {
+    size_t len = strlen(source) + 1;
+    char *dest = (char *) malloc( len * sizeof(char));
+    strncpy(dest, source, len);
+    return dest;
+}
+
 /**
  * Print utility function
  */
@@ -108,6 +115,9 @@ const char* url_to_str(URL * url)
     
     char *authority = calloc(50, sizeof(char));
     char *result = calloc(100, sizeof(char));
+
+    char * t = copyStr("this");
+    printf("%s\n", t);
     
     if(url->protocol) 
         fprintf(stdout, "Protocol: %s\n", url->protocol);
