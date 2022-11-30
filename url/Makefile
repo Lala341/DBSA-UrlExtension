@@ -1,6 +1,6 @@
 EXTENSION   = url
 MODULES     = url
-DATA        = url.sql url.control
+DATA        = url--1.0.sql url.control
 
 LDFLAGS=-lrt
 
