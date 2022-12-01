@@ -14,9 +14,9 @@ LANGUAGE C IMMUTABLE STRICT;
 
 CREATE TYPE testurl (
 	INPUT          = test_url_in,
-	OUTPUT         = test_url_out
-	-- LIKE           = text,
-	-- CATEGORY       = 'S'
+	OUTPUT         = test_url_out,
+	LIKE           = text,
+	CATEGORY       = 'S'
 );
 COMMENT ON TYPE testurl IS 'text written in url: [0-9A-Z]+';
 
