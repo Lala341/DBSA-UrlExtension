@@ -249,3 +249,39 @@ Datum url_to_text(PG_FUNCTION_ARGS)
     text *out = (text *) DirectFunctionCall1(textin, PointerGetDatum( url_to_str(s) ) );
     PG_RETURN_TEXT_P(out);
 }
+
+// To be continue --start
+PG_FUNCTION_INFO_V1(get_authority);
+Datum get_authority(PG_FUNCTION_ARGS)
+{
+    const URL *url = (URL *) PG_GETARG_POINTER(0);
+    if(url->port > 0) 
+        PG_RETURN_CSTRING(psprintf("%s:%d", url->host, url->port));
+    else 
+        PG_RETURN_CSTRING( url->host );
+}
+
+PG_FUNCTION_INFO_V1(get_file);
+Datum get_file(PG_FUNCTION_ARGS)
+{
+    const URL *url = (URL *) PG_GETARG_POINTER(0);
+    PG_RETURN_CSTRING( psprintf("%s?%s", url->path, url->query) );
+}
+
+PG_FUNCTION_INFO_V1(get_path);
+Datum get_path(PG_FUNCTION_ARGS)
+{
+    const URL *url = (URL *) PG_GETARG_POINTER(0);
+    PG_RETURN_CSTRING( url->path );
+}
+
+PG_FUNCTION_INFO_V1(same_host);
+Datum same_host(PG_FUNCTION_ARGS)
+{
+    const URL *url_1 = (URL *) PG_GETARG_POINTER(0);
+    const URL *url_2 = (URL *) PG_GETARG_POINTER(1);
+    // if (strcmp(namet2, nameIt2) != 0)
+    // if (namet2 != nameIt2)
+    PG_RETURN_CSTRING( url_1 );
+}
+// To be continue --finish

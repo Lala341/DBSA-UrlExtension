@@ -43,4 +43,24 @@ LANGUAGE C IMMUTABLE STRICT;
 CREATE CAST (text as url) WITH FUNCTION url(text) AS IMPLICIT;
 CREATE CAST (url as text) WITH FUNCTION text(url);
 
+-- to be continue --start
+CREATE OR REPLACE FUNCTION get_authority(url)
+RETURNS cstring
+AS '$libdir/url', 'get_authority'
+LANGUAGE C IMMUTABLE STRICT;
 
+CREATE OR REPLACE FUNCTION get_file(url)
+RETURNS cstring
+AS '$libdir/url', 'get_file'
+LANGUAGE C IMMUTABLE STRICT;
+
+CREATE OR REPLACE FUNCTION get_path(url)
+RETURNS cstring
+AS '$libdir/url', 'get_path'
+LANGUAGE C IMMUTABLE STRICT;
+
+CREATE OR REPLACE FUNCTION same_host(url, url)
+RETURNS cstring
+AS '$libdir/url', 'same_host'
+LANGUAGE C IMMUTABLE STRICT;
+-- to be continue --finish
