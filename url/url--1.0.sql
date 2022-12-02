@@ -24,9 +24,9 @@ LANGUAGE C IMMUTABLE STRICT;
 
 CREATE TYPE url (
 	INPUT          = url_in,
-	OUTPUT         = url_out
-	-- LIKE           = text,
-	-- CATEGORY       = 'S'
+	OUTPUT         = url_out,
+	LIKE           = text,
+	CATEGORY       = 'S'
 );
 COMMENT ON TYPE url IS 'text written in url: [0-9A-Z]+';
 

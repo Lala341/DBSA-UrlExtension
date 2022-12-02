@@ -6,13 +6,12 @@
 
 TESTURL * url_constructor_spec(char* str){
 
-    TESTURL * url = (TESTURL *) palloc( sizeof(TESTURL) );
+    TESTURL * url = (TESTURL *) palloc0( sizeof(TESTURL) );
     url->protocol = "https";
     url->host = "stackoverflow.com";
     url->port = 8080;
     url->query = "/test";
     url->fragment = "#new-start";
-    
     return url;
 }   
 
@@ -29,7 +28,8 @@ static inline char* url_to_str(const TESTURL * url)
 PG_FUNCTION_INFO_V1(test_url_in);
 Datum test_url_in(PG_FUNCTION_ARGS){
     char *spec = PG_GETARG_CSTRING(0);
-    PG_RETURN_POINTER( url_constructor_spec(spec) );
+    char *r = url_constructor_spec(spec);
+    PG_RETURN_POINTER( r);
 }
 
 /**

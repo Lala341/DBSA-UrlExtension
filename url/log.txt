@@ -1,0 +1,1001 @@
+********* QUERY **********
+select url '( "https://www.google.com:3000/" )' ;
+**************************
+
+********* QUERY **********
+select url '( "https://www.google.com:3000/" )' 
+select url '( "https://www.google.com:3000/" )' ;
+**************************
+
+********* QUERY **********
+select url '( "https://www.google.com:3000/" )' 
+select url '( "https://www.google.com:3000/" )' ;
+**************************
+
+********* QUERY **********
+select url '( "https://www.google.com:3000/" )' ;
+**************************
+
+********* QUERY **********
+SELECT 1
+ SELECT 1;
+**************************
+
+********* QUERY **********
+SELECT 1;
+**************************
+
+ ?column? 
+----------
+        1
+(1 row)
+
+********* QUERY **********
+select url '( "https://www.google.com:3000/" )' ;
+**************************
+
+********* QUERY **********
+drop extension url;
+**************************
+
+DROP EXTENSION
+********* QUERY **********
+create extension url;
+**************************
+
+CREATE EXTENSION
+********* QUERY **********
+select url '( "https://www.google.com:3000/" )' ;
+**************************
+
+********* QUERY **********
+select url '( "https://www.google.com:3000/" )' ;
+**************************
+
+********* QUERY **********
+select url '( "https://www.google.com:3000/" )' ;
+**************************
+
+********* QUERY **********
+ALTER USER postgres  PASSWORD '1234';
+**************************
+
+********* QUERY **********
+show log_destination ;
+**************************
+
+ log_destination 
+-----------------
+ stderr
+(1 row)
+
+********* QUERY **********
+show log_directory ;
+**************************
+
+ log_directory 
+---------------
+ log
+(1 row)
+
+********* QUERY **********
+show log_filename ;
+**************************
+
+          log_filename          
+--------------------------------
+ postgresql-%Y-%m-%d_%H%M%S.log
+(1 row)
+
+********* QUERY **********
+SELECT  pg_current_logfile();
+**************************
+
+ pg_current_logfile 
+--------------------
+ 
+(1 row)
+
+********* QUERY **********
+SHOW logging_collector;
+**************************
+
+ logging_collector 
+-------------------
+ off
+(1 row)
+
+********* QUERY **********
+SHOW log_directory;
+**************************
+
+ log_directory 
+---------------
+ log
+(1 row)
+
+********* QUERY **********
+SELECT * FROM pg_stat_activity;
+**************************
+
+ datid | datname  |  pid  | leader_pid | usesysid |      usename       | application_name | client_addr | client_hostname | client_port |         backend_start         |          xact_start           |          query_start          |         state_change          | wait_event_type |     wait_event      | state  | backend_xid | backend_xmin | query_id |              query              |         backend_type         
+-------+----------+-------+------------+----------+--------------------+------------------+-------------+-----------------+-------------+-------------------------------+-------------------------------+-------------------------------+-------------------------------+-----------------+---------------------+--------+-------------+--------------+----------+---------------------------------+------------------------------
+       |          | 22120 |            |          |                    |                  |             |                 |             | 2022-11-29 22:05:05.636738+01 |                               |                               |                               | Activity        | AutoVacuumMain      |        |             |              |          |                                 | autovacuum launcher
+       |          | 22122 |            |       10 | lauraforerocamacho |                  |             |                 |             | 2022-11-29 22:05:05.638307+01 |                               |                               |                               | Activity        | LogicalLauncherMain |        |             |              |          |                                 | logical replication launcher
+ 14034 | postgres | 22200 |            |       10 | lauraforerocamacho | psql             |             |                 |          -1 | 2022-11-29 22:09:45.762749+01 | 2022-11-29 22:16:13.362734+01 | 2022-11-29 22:16:13.362734+01 | 2022-11-29 22:16:13.362735+01 |                 |                     | active |             |          749 |          | SELECT * FROM pg_stat_activity; | client backend
+       |          | 22118 |            |          |                    |                  |             |                 |             | 2022-11-29 22:05:05.636169+01 |                               |                               |                               | Activity        | BgWriterMain        |        |             |              |          |                                 | background writer
+       |          | 22117 |            |          |                    |                  |             |                 |             | 2022-11-29 22:05:05.634981+01 |                               |                               |                               | Activity        | CheckpointerMain    |        |             |              |          |                                 | checkpointer
+       |          | 22119 |            |          |                    |                  |             |                 |             | 2022-11-29 22:05:05.636177+01 |                               |                               |                               | Activity        | WalWriterMain       |        |             |              |          |                                 | walwriter
+(6 rows)
+
+********* QUERY **********
+drop extension url;
+**************************
+
+DROP EXTENSION
+********* QUERY **********
+create extension url;
+**************************
+
+CREATE EXTENSION
+********* QUERY **********
+drop extension url;
+**************************
+
+********* QUERY **********
+drop extension url;
+**************************
+
+DROP EXTENSION
+********* QUERY **********
+create extension url;
+**************************
+
+CREATE EXTENSION
+********* QUERY **********
+drop extension url;
+**************************
+
+********* QUERY **********
+drop extension url;
+**************************
+
+DROP EXTENSION
+********* QUERY **********
+create extension url;
+**************************
+
+CREATE EXTENSION
+********* QUERY **********
+drop extension url;
+**************************
+
+********* QUERY **********
+drop extension url;
+**************************
+
+DROP EXTENSION
+********* QUERY **********
+create extension url;
+**************************
+
+CREATE EXTENSION
+********* QUERY **********
+drop extension url;
+**************************
+
+********* QUERY **********
+drop extension url;
+**************************
+
+DROP EXTENSION
+********* QUERY **********
+create extension url;
+**************************
+
+CREATE EXTENSION
+********* QUERY **********
+select url '( "https://google.com/" )' ;
+**************************
+
+********* QUERY **********
+drop extension url;
+**************************
+
+DROP EXTENSION
+********* QUERY **********
+create extension url;
+**************************
+
+CREATE EXTENSION
+********* QUERY **********
+select url '( "httpsgoogle.com/" )' ;
+**************************
+
+********* QUERY **********
+select url '( "https://google.com/" )' ;
+**************************
+
+********* QUERY **********
+drop extension url;
+**************************
+
+DROP EXTENSION
+********* QUERY **********
+create extension url;
+**************************
+
+CREATE EXTENSION
+********* QUERY **********
+create extension url;
+**************************
+
+********* QUERY **********
+select url '( "https://google.com/" )' ;
+**************************
+
+********* QUERY **********
+select url '( "https:google.com/" )' ;
+**************************
+
+********* QUERY **********
+select url '( "http://google.com/" )' ;
+**************************
+
+********* QUERY **********
+drop extension url;
+**************************
+
+DROP EXTENSION
+********* QUERY **********
+create extension url;
+**************************
+
+CREATE EXTENSION
+********* QUERY **********
+select url '( "http://google.com/" )' ;
+**************************
+
+********* QUERY **********
+drop extension url;
+**************************
+
+DROP EXTENSION
+********* QUERY **********
+create extension url;
+**************************
+
+CREATE EXTENSION
+********* QUERY **********
+select url '( "http://google.com/" )' ;
+**************************
+
+********* QUERY **********
+drop extension url;
+**************************
+
+DROP EXTENSION
+********* QUERY **********
+create extension url;
+**************************
+
+CREATE EXTENSION
+********* QUERY **********
+select url '( "http//google.com/" )' ;
+**************************
+
+********* QUERY **********
+select url '( "http://google.com/" )' ;
+**************************
+
+********* QUERY **********
+drop extension url;
+**************************
+
+DROP EXTENSION
+********* QUERY **********
+create extension url;
+**************************
+
+CREATE EXTENSION
+********* QUERY **********
+select url '( "http//google.com/" )' ;
+**************************
+
+********* QUERY **********
+select url '( "http://google.com/" )' ;
+**************************
+
+********* QUERY **********
+drop extension url;
+**************************
+
+DROP EXTENSION
+********* QUERY **********
+create extension url;
+**************************
+
+CREATE EXTENSION
+********* QUERY **********
+select url '( "http//google.com/" )' ;
+**************************
+
+********* QUERY **********
+select url '( "http://google.com/" )' ;
+**************************
+
+********* QUERY **********
+drop extension url;
+**************************
+
+DROP EXTENSION
+********* QUERY **********
+create extension url;
+**************************
+
+CREATE EXTENSION
+********* QUERY **********
+select url '( "http//google.com/" )' ;
+**************************
+
+********* QUERY **********
+select url '( "http://google.com/" )' ;
+**************************
+
+********* QUERY **********
+drop extension url;
+**************************
+
+DROP EXTENSION
+********* QUERY **********
+create extension url;
+**************************
+
+CREATE EXTENSION
+********* QUERY **********
+select url '( "http//google.com/" )' ;
+**************************
+
+********* QUERY **********
+select url '( "http://google.com/" )' ;
+**************************
+
+********* QUERY **********
+drop extension url;
+**************************
+
+DROP EXTENSION
+********* QUERY **********
+create extension url;
+**************************
+
+CREATE EXTENSION
+********* QUERY **********
+select url '( "http//google.com/" )' ;
+**************************
+
+********* QUERY **********
+select url '( "http://google.com/" )' ;
+**************************
+
+********* QUERY **********
+drop extension url;
+**************************
+
+DROP EXTENSION
+********* QUERY **********
+create extension url;
+**************************
+
+CREATE EXTENSION
+********* QUERY **********
+select url '( "http//google.com/" )' ;
+**************************
+
+********* QUERY **********
+select url '( "http://google.com/" )' ;
+**************************
+
+********* QUERY **********
+drop extension url;
+**************************
+
+DROP EXTENSION
+********* QUERY **********
+create extension url;
+**************************
+
+CREATE EXTENSION
+********* QUERY **********
+select url '( "http//google.com/" )' ;
+**************************
+
+********* QUERY **********
+select url '( "http://google.com/" )' ;
+**************************
+
+********* QUERY **********
+drop extension url;
+**************************
+
+DROP EXTENSION
+********* QUERY **********
+create extension url;
+**************************
+
+CREATE EXTENSION
+********* QUERY **********
+select url '( "http//google.com/" )' ;
+**************************
+
+********* QUERY **********
+select url '( "http://google.com/" )' ;
+**************************
+
+********* QUERY **********
+drop extension url;
+**************************
+
+DROP EXTENSION
+********* QUERY **********
+create extension url;
+**************************
+
+CREATE EXTENSION
+********* QUERY **********
+select url '( "http//google.com/" )' ;
+**************************
+
+********* QUERY **********
+select url '( "http://google.com/" )' ;
+**************************
+
+********* QUERY **********
+drop extension url;
+**************************
+
+DROP EXTENSION
+********* QUERY **********
+create extension url;
+**************************
+
+CREATE EXTENSION
+********* QUERY **********
+select url '( "http//google.com/" )' ;
+**************************
+
+********* QUERY **********
+select url '( "http://google.com/" )' ;
+**************************
+
+********* QUERY **********
+drop extension url;
+**************************
+
+DROP EXTENSION
+********* QUERY **********
+create extension url;
+**************************
+
+CREATE EXTENSION
+********* QUERY **********
+select url '( "http//google.com/" )' ;
+**************************
+
+********* QUERY **********
+select url '( "http://google.com/" )' ;
+**************************
+
+********* QUERY **********
+drop extension url;
+**************************
+
+DROP EXTENSION
+********* QUERY **********
+create extension url;
+**************************
+
+********* QUERY **********
+drop extension url;
+**************************
+
+********* QUERY **********
+create extension url;
+**************************
+
+CREATE EXTENSION
+********* QUERY **********
+select url '( "http//google.com/" )' ;
+**************************
+
+********* QUERY **********
+select url '( "http://google.com/" )' ;
+**************************
+
+********* QUERY **********
+drop extension url;
+**************************
+
+DROP EXTENSION
+********* QUERY **********
+create extension url;
+**************************
+
+********* QUERY **********
+drop extension url;
+**************************
+
+********* QUERY **********
+create extension url;
+**************************
+
+CREATE EXTENSION
+********* QUERY **********
+select url '( "http//google.com/" )' ;
+**************************
+
+********* QUERY **********
+select url '( "http://google.com/" )' ;
+**************************
+
+********* QUERY **********
+drop extension url;
+**************************
+
+DROP EXTENSION
+********* QUERY **********
+create extension url;
+**************************
+
+CREATE EXTENSION
+********* QUERY **********
+select url '( "http//google.com/" )' ;
+**************************
+
+********* QUERY **********
+select url '( "http://google.com/" )' ;
+**************************
+
+********* QUERY **********
+drop extension url;
+**************************
+
+DROP EXTENSION
+********* QUERY **********
+create extension url;
+**************************
+
+CREATE EXTENSION
+********* QUERY **********
+select url '( "http//google.com/" )' ;
+**************************
+
+********* QUERY **********
+select url '( "http://google.com/" )' ;
+**************************
+
+********* QUERY **********
+drop extension url;
+**************************
+
+DROP EXTENSION
+********* QUERY **********
+create extension url;
+**************************
+
+CREATE EXTENSION
+********* QUERY **********
+select url '( "http//google.com/" )' ;
+**************************
+
+********* QUERY **********
+select url '( "http://google.com/" )' ;
+**************************
+
+********* QUERY **********
+createuser 
+
+CREATE USER postgres SUPERUSER;
+**************************
+
+********* QUERY **********
+CREATE USER postgres SUPERUSER;
+**************************
+
+CREATE ROLE
+********* QUERY **********
+CREATE DATABASE postgres WITH OWNER postgres;
+**************************
+
+********* QUERY **********
+alter DATABASE postgres WITH OWNER postgres;
+**************************
+
+********* QUERY **********
+delete database postgres
+;
+**************************
+
+********* QUERY **********
+drop database postgres
+;
+**************************
+
+********* QUERY **********
+select url '( "http://google.com/" )' ;
+**************************
+
+********* QUERY **********
+select url '( "http://google.com/" )' ;
+**************************
+
+********* QUERY **********
+select url '( "http//google.com/" )' ;
+**************************
+
+********* QUERY **********
+select url '( "http://google.com" )' ;
+**************************
+
+********* QUERY **********
+select text 'data';
+**************************
+
+ text 
+------
+ data
+(1 row)
+
+********* QUERY **********
+select text 'data';
+**************************
+
+ text 
+------
+ data
+(1 row)
+
+********* QUERY **********
+select url '( "http://google.com" )' ;
+**************************
+
+********* QUERY **********
+select url '( "http://google.com" )' ;
+**************************
+
+********* QUERY **********
+select text 'data';
+**************************
+
+ text 
+------
+ data
+(1 row)
+
+********* QUERY **********
+drop extension url;
+**************************
+
+DROP EXTENSION
+********* QUERY **********
+create exension url;
+**************************
+
+********* QUERY **********
+create extension url;
+**************************
+
+CREATE EXTENSION
+********* QUERY **********
+select url '( "http://google.com" )' ;
+**************************
+
+********* QUERY **********
+drop extension url;
+**************************
+
+DROP EXTENSION
+********* QUERY **********
+create extension url;
+**************************
+
+CREATE EXTENSION
+********* QUERY **********
+select url '( "http://google.com" )' ;
+**************************
+
+********* QUERY **********
+drop extension url;
+**************************
+
+DROP EXTENSION
+********* QUERY **********
+create extension url;
+**************************
+
+CREATE EXTENSION
+********* QUERY **********
+select url '( "http://google.com" )' ;
+**************************
+
+********* QUERY **********
+ALTER USER postgres  PASSWORD '1234';
+**************************
+
+ALTER ROLE
+********* QUERY **********
+CREATE USER root  SUPERUSER;
+**************************
+
+CREATE ROLE
+********* QUERY **********
+ALTER USER root  PASSWORD '1234';
+**************************
+
+ALTER ROLE
+********* QUERY **********
+drop extension url;
+**************************
+
+DROP EXTENSION
+********* QUERY **********
+create extension url;
+**************************
+
+CREATE EXTENSION
+********* QUERY **********
+select url '( "https://www.google.com:3000/this/that?q=putien=5#fff" )';
+**************************
+
+********* QUERY **********
+drop extension url;
+**************************
+
+DROP EXTENSION
+********* QUERY **********
+create extension url;
+**************************
+
+CREATE EXTENSION
+********* QUERY **********
+select url '( "https//www.google.com:3000/this/that?q=putien=5#fff" )';
+**************************
+
+********* QUERY **********
+select url '( "https://www.google.com:3000/this/that?q=putien=5#fff" )';
+**************************
+
+             List of relations
+ Schema | Name | Type  |       Owner        
+--------+------+-------+--------------------
+ public | data | table | lauraforerocamacho
+(1 row)
+
+             List of relations
+ Schema | Name | Type  |       Owner        
+--------+------+-------+--------------------
+ public | data | table | lauraforerocamacho
+(1 row)
+
+                    List of installed extensions
+  Name   | Version |   Schema   |            Description             
+---------+---------+------------+------------------------------------
+ example | 1.0     | public     | empty example
+ plpgsql | 1.0     | pg_catalog | PL/pgSQL procedural language
+ url     | 1.0     | public     | url input/ouput functions for text
+(3 rows)
+
+********* QUERY **********
+CREATE TABLE links (
+    id int PRIMARY KEY,
+    link url
+);
+**************************
+
+CREATE TABLE
+********* QUERY **********
+INSERT INTO links VALUES (1, '( "https://www.google.com:3000/this/that?q=putien=5#fff" )');
+**************************
+
+********* QUERY **********
+drop extension url;
+**************************
+
+********* QUERY **********
+drop database links;
+**************************
+
+********* QUERY **********
+drop table links;
+**************************
+
+DROP TABLE
+********* QUERY **********
+drop extension url;
+**************************
+
+DROP EXTENSION
+********* QUERY **********
+create extension url;
+**************************
+
+CREATE EXTENSION
+********* QUERY **********
+select url '( "http://google.com" )' ;
+**************************
+
+********* QUERY **********
+drop database links;
+**************************
+
+********* QUERY **********
+drop extension url;
+**************************
+
+DROP EXTENSION
+********* QUERY **********
+create extension url;
+**************************
+
+CREATE EXTENSION
+********* QUERY **********
+select url '( "http://google.com" )' ;
+**************************
+
+********* QUERY **********
+drop extension url;
+**************************
+
+DROP EXTENSION
+********* QUERY **********
+create extension url;
+**************************
+
+CREATE EXTENSION
+********* QUERY **********
+select url '( "https://www.google.com:3000/this/that?q=putien=5#fff" )';
+**************************
+
+********* QUERY **********
+SHOW CONFIG_DIRECTORY;
+**************************
+
+********* QUERY **********
+SHOW config_directory;
+**************************
+
+********* QUERY **********
+SHOW config_file;
+**************************
+
+               config_file               
+-----------------------------------------
+ /usr/local/var/postgres/postgresql.conf
+(1 row)
+
+********* QUERY **********
+select url '( "https://www.google.com:3000/this/that?q=putien=5#fff" )';
+**************************
+
+********* QUERY **********
+SHOW config_file;
+**************************
+
+               config_file               
+-----------------------------------------
+ /usr/local/var/postgres/postgresql.conf
+(1 row)
+
+********* QUERY **********
+select url '( "https://www.google.com:3000/this/that?q=putien=5#fff" )';
+**************************
+
+********* QUERY **********
+select url '( "http://google.com" )' ;
+**************************
+
+********* QUERY **********
+select url '( "http://google.com" )' ;
+**************************
+
+********* QUERY **********
+create extension url;
+**************************
+
+********* QUERY **********
+select url '( "http//google.com" )' ;
+**************************
+
+********* QUERY **********
+select url '( "http://google.com" )' ;
+**************************
+
+********* QUERY **********
+select url '( "http//google.com" )' ;
+**************************
+
+********* QUERY **********
+select url '( "http://google.com" )' ;
+**************************
+
+********* QUERY **********
+drop extension url;
+**************************
+
+DROP EXTENSION
+********* QUERY **********
+create extension url;
+**************************
+
+CREATE EXTENSION
+********* QUERY **********
+select url '( "http://google.com" )' ;
+**************************
+
+********* QUERY **********
+select url '( "http//google.com" )' ;
+**************************
+
+********* QUERY **********
+select url '( "http//google.com" )' ;
+**************************
+
+********* QUERY **********
+select url '( "http://google.com" )' ;
+**************************
+
+********* QUERY **********
+select url '( "http//google.com" )' ;
+**************************
+
+********* QUERY **********
+select url '( "http://google.com" )' ;
+**************************
+
+********* QUERY **********
+select url '( "http//google.com" )' ;
+**************************
+
+********* QUERY **********
+select url '( "http://google.com" )' ;
+**************************
+
+********* QUERY **********
+show pg_log;
+**************************
+
+********* QUERY **********
+show pg_log;
+**************************
+
+********* QUERY **********
+show data_directory;
+**************************
+
+     data_directory      
+-------------------------
+ /usr/local/var/postgres
+(1 row)
+
+********* QUERY **********
+select url '( "http//google.com" )' ;
+**************************
+
+********* QUERY **********
+select url '( "http://google.com" )' ;
+**************************
+
+********* QUERY **********
+drop extension url;
+**************************
+
+DROP EXTENSION
+********* QUERY **********
+create extension url;
+**************************
+
+CREATE EXTENSION
+********* QUERY **********
+select url '( "http://google.com" )' ;
+**************************
+
