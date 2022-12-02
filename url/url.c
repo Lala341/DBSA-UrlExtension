@@ -45,7 +45,7 @@ URL * url_constructor_spec(char* str){
     //     );
     // }
     // Remove quotes and special char
-    char *spec = stripString(str);
+    // char *spec = stripString(str);
     // pfree(raw);
 
     URL * url = (URL *) palloc0( sizeof(URL) );
@@ -57,7 +57,6 @@ URL * url_constructor_spec(char* str){
 
     regex_t rx;
     int rc;
-    regmatch_t pmatch[8];
     char msg[100];
     const char *string_regex ="^(.*):\\/\\/([A-Za-z0-9\\-\\.]+):?([0-9]{2,4})?((\\/[A-Za-z0-9]+)*)*\\/?(\\?[A-Za-z0-9]+\\=[A-Za-z0-9]+(\\&[A-Za-z0-9]+\\=[A-Za-z0-9]+)*)*(\\#[A-Za-z0-9]+)*";
 
@@ -73,30 +72,32 @@ URL * url_constructor_spec(char* str){
         );
     }
 
-    size_t match_count = rx.re_nsub + 1;
+    // size_t match_count = rx.re_nsub + 1;
+    size_t match_count = 8;
+    regmatch_t pmatch[8];
 
-    if (0 != (rc = regexec(&rx, spec, match_count, pmatch, 0))) {
+    if (0 != (rc = regexec(&rx, str, match_count, pmatch, 0))) {
         ereport(
             ERROR,
             (
                 errcode(ERRCODE_INVALID_TEXT_REPRESENTATION),
-                errmsg("Invalid URL pattern provided (Error Code: %d): \"%s\"", rc, spec)
+                errmsg("Invalid URL pattern provided (Error Code: %d): \"%s\"", rc, str)
             )
         );
     }
 
     // Protocol
-    url->protocol = extractStr(pmatch[1], spec);
+    url->protocol = extractStr(pmatch[1], str);
     url->protocol = removeChar(url->protocol, ':');
-    url->host = extractStr(pmatch[2], spec);
+    url->host = extractStr(pmatch[2], str);
     // Port
-    char *port_str = extractStr(pmatch[3], spec);
+    char *port_str = extractStr(pmatch[3], str);
     port_str = removeChar(port_str, ':');
     // Cast to int
     url->port = atoi(port_str);
     // Path
-    url->path = extractStr(pmatch[4], spec);
-    char *query_str = extractStr(pmatch[6], spec);
+    url->path = extractStr(pmatch[4], str);
+    char *query_str = extractStr(pmatch[6], str);
     query_str = removeChar(query_str, '?');
     url->query = query_str;
 
@@ -132,9 +133,14 @@ Datum url_constructor_port(PG_FUNCTION_ARGS){
     
     url->protocol = copyStr(protocol);
     url->host = copyStr(host);
-    url->port = port;
+    url->port = 0;
+    // url->port = port;
     url->query = copyStr(file);
     url->fragment = "";
+
+    pfree(protocol);
+    pfree(host);
+    pfree(file);
     
     PG_RETURN_POINTER( url );
 }
@@ -191,20 +197,24 @@ static inline char* url_to_str(const URL * url)
  */
 PG_FUNCTION_INFO_V1(url_in);
 Datum url_in(PG_FUNCTION_ARGS){
-    switch(PG_NARGS()) {
-        char *spec = NULL, *protocol = NULL, *domain = NULL, *file = NULL;
-        int port = 0;
-        // case 4:
-        //     protocol = PG_GETARG_CSTRING(0);
-        //     domain = PG_GETARG_CSTRING(1);
-        //     port = PG_GETARG_INT32(2);
-        //     file = PG_GETARG_CSTRING(3);
-        //     PG_RETURN_POINTER( url_constructor_port(protocol, domain, port, file) );
-        //     break;
-        default:
-            spec = PG_GETARG_CSTRING(0);
-            PG_RETURN_POINTER( url_constructor_spec(spec) );
-    }
+    char *spec = NULL, *protocol = NULL, *file = NULL;
+    // switch(PG_NARGS()) {
+    //     int port = 0;
+    //     case 4:
+    //         protocol = PG_GETARG_CSTRING(0);
+    //         domain = PG_GETARG_CSTRING(1);
+    //         port = PG_GETARG_INT32(2);
+    //         file = PG_GETARG_CSTRING(3);
+    //         PG_RETURN_POINTER( url_constructor_port(protocol, domain, port, file) );
+    //         break;
+    //     default:
+    // }
+    
+    spec = PG_GETARG_CSTRING(0);
+    URL *r = url_constructor_spec(spec);
+    // pfree(spec);
+    pfree(r);
+    PG_RETURN_POINTER( r );
 }
 
 /**
@@ -213,7 +223,6 @@ Datum url_in(PG_FUNCTION_ARGS){
 PG_FUNCTION_INFO_V1(url_out);
 Datum url_out(PG_FUNCTION_ARGS)
 {
-    
     const URL *url = (URL *) PG_GETARG_POINTER(0);
     PG_RETURN_CSTRING( url_to_str(url) );
 }
@@ -236,7 +245,9 @@ Datum text_to_url(PG_FUNCTION_ARGS)
 {
     text *txt = PG_GETARG_TEXT_P(0);
     char *str = DatumGetCString( DirectFunctionCall1(textout, PointerGetDatum(txt) ) );
-    PG_RETURN_POINTER( url_constructor_spec( str ) );
+    URL * r = url_constructor_spec( str );
+    pfree(r);
+    PG_RETURN_POINTER( r );
 }
 
 /**

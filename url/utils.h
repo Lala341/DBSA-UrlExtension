@@ -103,7 +103,10 @@ char * extractStr(regmatch_t pmatch, const char *str) {
 
 char * copyStr(const char *source) {
     size_t len = strlen(source) + 1;
-    char *dest = (char *) palloc0( len * sizeof(char));
-    strncpy(dest, source, len);
+
+    char *dest = (char *) palloc0( len );
+    SET_VARSIZE(dest, len);
+    memcpy(dest, source, len);
+    // strncpy(dest, source, len);
     return dest;
 }
