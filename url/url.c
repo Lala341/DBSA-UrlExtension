@@ -48,8 +48,8 @@ URL * url_constructor_spec(char* str){
     // char *spec = stripString(str);
     // pfree(raw);
 
-    URL * url = (URL *) palloc0( sizeof(URL) );
-    url->protocol = "http";
+    URL * url = (URL *) palloc( sizeof(URL) );
+    url->protocol = "";
     url->host = "";
     url->port = 0;
     url->query = "";
@@ -73,8 +73,8 @@ URL * url_constructor_spec(char* str){
     }
 
     // size_t match_count = rx.re_nsub + 1;
-    size_t match_count = 8;
-    regmatch_t pmatch[8];
+    size_t match_count = 9;
+    regmatch_t pmatch[9];
 
     if (0 != (rc = regexec(&rx, str, match_count, pmatch, 0))) {
         ereport(
@@ -86,34 +86,16 @@ URL * url_constructor_spec(char* str){
         );
     }
 
-    // Protocol
-    url->protocol = extractStr(pmatch[1], str);
-    url->protocol = removeChar(url->protocol, ':');
+    url->protocol = removeChar(extractStr(pmatch[1], str), ':');
     url->host = extractStr(pmatch[2], str);
-    // Port
-    char *port_str = extractStr(pmatch[3], str);
-    port_str = removeChar(port_str, ':');
-    // Cast to int
-    url->port = atoi(port_str);
-    // Path
+    url->port = atoi(removeChar(extractStr(pmatch[3], str), ':'));
     url->path = extractStr(pmatch[4], str);
-    char *query_str = extractStr(pmatch[6], str);
-    query_str = removeChar(query_str, '?');
-    url->query = query_str;
-
-    // ereport(
-    //         ERROR,
-    //         (errcode(ERRCODE_INVALID_TEXT_REPRESENTATION),
-    //         errmsg("Reg: [1]%3lu,%3lu = [2]%3lu,%3lu = [3]%3lu,%3lu", (unsigned long) pmatch[1].rm_so, (unsigned long) pmatch[1].rm_eo, (unsigned long) pmatch[2].rm_so, (unsigned long) pmatch[2].rm_eo, (unsigned long) pmatch[3].rm_so, (unsigned long) pmatch[3].rm_eo))
-    //     );
-    
-    // ereport(
-    //         ERROR,
-    //         (errcode(ERRCODE_INVALID_TEXT_REPRESENTATION),
-    //         errmsg("size (%d) Output: %s || %s || %d || %s || %s", PG_NARGS(), spec, url->protocol, url->port, url->path, url->query))
-    //     );
+    url->query = removeChar(extractStr(pmatch[6], str), '?');
+    url->fragment = removeChar(extractStr(pmatch[8], str),'#');
 
     // PG_RETURN_TEXT_P( &url );
+    // pfree(url);
+    regfree(&rx);
     return url;
 }   
 
@@ -147,48 +129,20 @@ Datum url_constructor_port(PG_FUNCTION_ARGS){
 
 static inline char* url_to_str(const URL * url)
 {
-
-    // char *authority = palloc0(50 * sizeof(char));
-    // char *result = palloc0(100 * sizeof(char));
-    // 
-    // // if(url->protocol) 
-    // //     fprintf(stdout, "Protocol: %s\n", url->protocol);
-    // // if(url->host) 
-    // //     fprintf(stdout, "Host: %s\n", url->host);
-    // // fprintf(stdout, "Port: %d\n", url->port);
-    // if(url->port > 0) {
-    //     psprintf(authority, "%s:%d", url->host,url->port);
-    //     // fprintf(stdout, "Authority: %s:%d\n", url->host, url->port);
-    // } else {
-    //     psprintf(authority, "%s", url->host);
-    //     // fprintf(stdout, "Authority: %s\n", url->host);
-    // }
-    // psprintf(result, "%s://%s", url->protocol, authority);
-    // // strcat(result, url->protocol);
-    //     // strcat(result, "://");
-    // // strcat(result, authority);
-    // // fprintf(stdout, "result with protocol: %s\n", result);
-    // if(url->path) {
-    //     strcat(result, url->path);
-    //     // fprintf(stdout, "Path: %s\n", url->path);
-    // }
-    // if(url->query != "") {
-    //     char * temp = result;
-    //     psprintf(result, "%s?%s", temp, url->query);
-    //     // fprintf(stdout, "Query: %s\n", url->query);
-    // }
-    // if(url->fragment != ""){ 
-    //     char * temp = result;
-    //     psprintf(result, "#%s", url->fragment);
-    //     // fprintf(stdout, "Fragment: %s\n", url->fragment);
-    // }
-    // // fprintf(stdout, "result with fragment: %s\n", result);
-    // // char * result = psprintf("%s", result);
-
-    // // Datum arg = PG_GETARG_DATUM(0);
-
-	// // PG_RETURN_CSTRING( url_to_str() );
-    char * result = psprintf("%s://%s:%d/%s#%s", url->protocol, url->host,url->port, url->query, url->fragment);
+    char *authority;
+    char *result;
+    if(url->port > 0)
+        authority = psprintf("%s:%d", url->host, url->port);
+    else
+        authority = psprintf("%s", url->host);
+    result = psprintf("%s://%s", url->protocol, authority);
+    if(url->path)
+        strcat(result, url->path);
+    if(url->query) 
+        result = psprintf("%s?%s", result, url->query);
+    if(url->fragment)
+        result = psprintf("%s#%s", result, url->fragment);
+    pfree(url);
     return result;
 }
 
@@ -246,6 +200,8 @@ Datum text_to_url(PG_FUNCTION_ARGS)
     text *txt = PG_GETARG_TEXT_P(0);
     char *str = DatumGetCString( DirectFunctionCall1(textout, PointerGetDatum(txt) ) );
     URL * r = url_constructor_spec( str );
+    pfree(str);
+    pfree(txt);
     pfree(r);
     PG_RETURN_POINTER( r );
 }
@@ -256,7 +212,129 @@ Datum text_to_url(PG_FUNCTION_ARGS)
 PG_FUNCTION_INFO_V1(url_to_text);
 Datum url_to_text(PG_FUNCTION_ARGS)
 {
-    const URL *s = (URL *) PG_GETARG_POINTER(0);    
-    text *out = (text *) DirectFunctionCall1(textin, PointerGetDatum( url_to_str(s) ) );
-    PG_RETURN_TEXT_P(out);
+    // URL *s = (URL *) ; 
+    
+    URL *url = (URL *) PG_GETARG_POINTER(0);   
+    pfree(url);
+    // char * ss = url_to_str(s);
+    // text *out = (text *) DirectFunctionCall1(textin, PointerGetDatum(url) );
+    // pfree(url);
+    // pfree(ss);
+    // pfree(out);
+    PG_RETURN_CSTRING(url->protocol);
 }
+
+// To be continue --start
+PG_FUNCTION_INFO_V1(get_authority);
+Datum get_authority(PG_FUNCTION_ARGS)
+{
+    const URL *url = (URL *) PG_GETARG_POINTER(0);
+    if(url->port > 0) 
+        PG_RETURN_CSTRING(psprintf("%s:%d", url->host, url->port));
+    else 
+        PG_RETURN_CSTRING( url->host );
+    //it returns a random char in the first time only
+}
+
+PG_FUNCTION_INFO_V1(get_file);
+Datum get_file(PG_FUNCTION_ARGS)
+{
+    const URL *url = (URL *) PG_GETARG_POINTER(0);
+    if(url->path != "" && url->query != "")
+        PG_RETURN_CSTRING( psprintf("%s?%s", url->path, url->query) );
+    if(url->path != "")
+        PG_RETURN_CSTRING( psprintf("%s", url->path) );
+    if(url->query != "")
+        PG_RETURN_CSTRING( psprintf("?%s", url->query) );
+    PG_RETURN_CSTRING("");
+}
+
+PG_FUNCTION_INFO_V1(get_path);
+Datum get_path(PG_FUNCTION_ARGS)
+{
+    const URL *url = (URL *) PG_GETARG_POINTER(0);
+    PG_RETURN_CSTRING( url->path );
+}
+
+
+// not working
+PG_FUNCTION_INFO_V1(same_host);
+Datum same_host(PG_FUNCTION_ARGS)
+{
+        PG_RETURN_BOOL( true );
+
+    // const URL *url_1 = (URL *) PG_GETARG_POINTER(0);
+    // const URL *url_2 = (URL *) PG_GETARG_POINTER(1);
+    // if (strcmp(namet2, nameIt2) != 0)
+    // if (namet2 != nameIt2)
+    // PG_RETURN_BOOL( true );
+}
+
+// not working
+PG_FUNCTION_INFO_V1(get_default_port);
+Datum get_default_port(PG_FUNCTION_ARGS)
+{
+    const URL *url = (URL *) PG_GETARG_POINTER(0);
+    // int j = 0;
+    // char str[6] = {0,0,0,0,0,0};
+    // strncpy(str, url->protocol, 6);
+    
+    // char ch;
+    // while (str[j]) {
+        
+    //     ch = str[j];
+    //     putchar(toupper(ch));
+    //     j++;
+    // }
+    if (url->protocol == "HTTP") 
+        PG_RETURN_INT32( 80 );
+    if (url->protocol == "HTTPS") 
+        PG_RETURN_INT32( 443 );
+    if (url->protocol == "FTP") 
+        PG_RETURN_INT32( 21 );
+    PG_RETURN_INT32( 0 );
+}
+
+PG_FUNCTION_INFO_V1(get_host);
+Datum get_host(PG_FUNCTION_ARGS)
+{
+    const URL *url = (URL *) PG_GETARG_POINTER(0);
+    PG_RETURN_CSTRING( url->host );
+}
+
+PG_FUNCTION_INFO_V1(get_port);
+Datum get_port(PG_FUNCTION_ARGS)
+{
+    const URL *url = (URL *) PG_GETARG_POINTER(0);
+    PG_RETURN_INT32( url->port );
+}
+
+PG_FUNCTION_INFO_V1(get_query);
+Datum get_query(PG_FUNCTION_ARGS)
+{
+    const URL *url = (URL *) PG_GETARG_POINTER(0);
+    PG_RETURN_CSTRING( url->query );
+}
+
+PG_FUNCTION_INFO_V1(get_ref);
+Datum get_ref(PG_FUNCTION_ARGS)
+{
+    const URL *url = (URL *) PG_GETARG_POINTER(0);
+    PG_RETURN_CSTRING( url->fragment );
+}
+
+
+PG_FUNCTION_INFO_V1(equals);
+Datum equals(PG_FUNCTION_ARGS)
+{
+    text *txt1 = PG_GETARG_TEXT_P(0);
+    text *txt2 = PG_GETARG_TEXT_P(1);
+    char *str1 = DatumGetCString( DirectFunctionCall1(textout, PointerGetDatum(txt1) ) );
+    char *str2 = DatumGetCString( DirectFunctionCall1(textout, PointerGetDatum(txt2) ) );
+    int len = strlen(str1);
+    if(len != strlen(str2))
+        PG_RETURN_BOOL( false );
+    PG_RETURN_BOOL( compairChars(str1, str2, len) );
+}
+
+// To be continue --finish

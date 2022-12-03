@@ -63,20 +63,20 @@
 
 | Return type | Method | Index supported | num |
 | ----------- | ----------- | ----------- | ------ |
-| boolean | equals(URL url1, URL url2) | Y |  3   |
-| varchar | getAuthority() | N |    1       |    
-| int | getDefaultPort() | N |     2      |
-| varchar | getFile() | N |      1     |
-| varchar | getHost() | N |      4     |
-| varchar | getPath() | N |      1     |
-| int | getPort() | N |     2      |
-| varchar | getProtocol() | N |      3     |
-| varchar | getQuery() | N |     3      |
-| String | getRef() | N |     4      |
+| boolean | equals(URL url1, URL url2) | Y |  3   | done
+| varchar | getAuthority() | N |    1       |   done
+| int | getDefaultPort() | N |     2      | done
+| varchar | getFile() | N |      1     | done
+| varchar | getHost() | N |      4     | done
+| varchar | getPath() | N |      1     | done
+| int | getPort() | N |     2      | done
+| varchar | getProtocol() | N |      3     | done
+| varchar | getQuery() | N |     3      | done
+| String | getRef() | N |     4      | done
 | String | getUserInfo() | N |     2      |
 | boolean | sameFile(URL url1, URL url2) | Y |     4      |
 | boolean | sameHost(URL url1, URL url2) | Y |     1      |
-| varchar | toString() | N |     2      |
+| varchar | toString() | N |     2      | done
 
 Abd -1
 Isa -2

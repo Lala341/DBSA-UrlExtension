@@ -110,3 +110,19 @@ char * copyStr(const char *source) {
     // strncpy(dest, source, len);
     return dest;
 }
+
+bool compairChars(char * str1, char * str2, int len){
+    for(int i=0; i<len; i++)
+        if(str1[i] != str2[i]) 
+            return false;
+    return true;
+}
+
+// TODO delete before submitting
+void test() {
+    ereport(
+            ERROR,
+            (errcode(ERRCODE_INVALID_TEXT_REPRESENTATION),
+            errmsg("TEST"))
+        );
+}
