@@ -3,18 +3,23 @@
 
 CREATE OR REPLACE FUNCTION url_in(cstring)
 RETURNS url
-AS '$libdir/url'
+AS '$libdir/url', 'url_in'
 LANGUAGE C IMMUTABLE STRICT;
 
 --url_out(url)
 CREATE OR REPLACE FUNCTION url_out(url)
 RETURNS cstring
-AS '$libdir/url'
+AS '$libdir/url', 'url_out'
 LANGUAGE C IMMUTABLE STRICT;
 
 CREATE OR REPLACE FUNCTION url(cstring, cstring, integer, cstring)
 RETURNS url
-AS '$libdir/url', 'url_constructor_port'
+AS '$libdir/url', 'construct_url_with_port'
+LANGUAGE C IMMUTABLE STRICT;
+
+CREATE OR REPLACE FUNCTION url(cstring, cstring, cstring)
+RETURNS url
+AS '$libdir/url', 'construct_url_without_port'
 LANGUAGE C IMMUTABLE STRICT;
 
 CREATE OR REPLACE FUNCTION get_protocol(url)
@@ -30,24 +35,27 @@ CREATE TYPE url (
 );
 COMMENT ON TYPE url IS 'text written in url: [0-9A-Z]+';
 
-CREATE OR REPLACE FUNCTION url(text)
-RETURNS url
-AS '$libdir/url', 'text_to_url'
-LANGUAGE C IMMUTABLE STRICT;
+-- CREATE OR REPLACE FUNCTION url(text)
+-- RETURNS url
+-- AS '$libdir/url', 'text_to_url'
+-- LANGUAGE C IMMUTABLE STRICT;
 
-CREATE OR REPLACE FUNCTION text(url)
-RETURNS cstring
-AS '$libdir/url', 'url_to_text'
-LANGUAGE C IMMUTABLE STRICT;
+-- CREATE OR REPLACE FUNCTION text(url)
+-- RETURNS cstring
+-- AS '$libdir/url', 'url_to_text'
+-- LANGUAGE C IMMUTABLE STRICT;
 
 -- CREATE CAST (text as url) WITH FUNCTION url(text) AS IMPLICIT;
 -- CREATE CAST (url as cstring) WITH FUNCTION text(url);
+
 
 -- to be continue --start
 CREATE OR REPLACE FUNCTION get_authority(url)
 RETURNS cstring
 AS '$libdir/url', 'get_authority'
 LANGUAGE C IMMUTABLE STRICT;
+
+/*
 
 CREATE OR REPLACE FUNCTION get_file(url)
 RETURNS cstring
@@ -95,3 +103,5 @@ RETURNS boolean
 AS '$libdir/url', 'equals'
 LANGUAGE C IMMUTABLE STRICT;
 -- to be continue --finish
+
+*/

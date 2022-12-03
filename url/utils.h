@@ -32,23 +32,6 @@ int countSpecialChars(char * str){
     return count;
 }
 
-// void removeChar(char * str, char c){
-//     int i, j;
-//     int len = strlen(str);
-//     for(i=0; i<len; i++)
-//     {
-//         if(str[i] == c)
-//         {
-//             for(j=i; j<len; j++)
-//             {
-//                 str[j] = str[j+1];
-//             }
-//             len--;
-//             i--;
-//         }
-//     }
-// }
-
 char * removeChar(char * str, char c){
     int i, j = 0;
     int len = strlen(str);
@@ -90,26 +73,27 @@ char * stripString(char * str){
 char * extractStr(regmatch_t pmatch, const char *str) {
     int len = pmatch.rm_eo - pmatch.rm_so;
 
-    // size_t size = VARSIZE(str);
-    // text *destination = (text *) palloc(VARHDRSZ + size);
-    char *dest = (char *) palloc0( (len) * sizeof(char));
-    // SET_VARSIZE(dest, len);
+    // char *dest = (char *) palloc0( (len) * sizeof(char));
+    // // Copy the url from regex find_start till find_end
+    // strncpy(dest, str + pmatch.rm_so, pmatch.rm_eo - pmatch.rm_so);
 
-    // Copy the url from regex find_start till find_end
-    strncpy(dest, str + pmatch.rm_so, pmatch.rm_eo - pmatch.rm_so);
-    // dest[len + 1] = 0;
+    char *ptr_start = str + pmatch.rm_so;
+    char *dest = malloc(len + 1);
+    memset(dest, 0, len + 1);
+    memcpy(dest, ptr_start, len);
+    
     return dest;
 }
 
-char * copyStr(const char *source) {
-    size_t len = strlen(source) + 1;
+// char * copyStr(const char *source) {
+//     size_t len = strlen(source) + 1;
 
-    char *dest = (char *) palloc0( len );
-    SET_VARSIZE(dest, len);
-    memcpy(dest, source, len);
-    // strncpy(dest, source, len);
-    return dest;
-}
+//     char *dest = (char *) palloc0( len );
+//     SET_VARSIZE(dest, len);
+//     memcpy(dest, source, len);
+//     // strncpy(dest, source, len);
+//     return dest;
+// }
 
 bool compairChars(char * str1, char * str2, int len){
     for(int i=0; i<len; i++)
@@ -125,4 +109,9 @@ void test() {
             (errcode(ERRCODE_INVALID_TEXT_REPRESENTATION),
             errmsg("TEST"))
         );
+}
+
+unsigned num_digits(const unsigned n) {
+    if (n < 10) return 1;
+    return 1 + num_digits(n / 10);
 }

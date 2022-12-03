@@ -178,6 +178,7 @@ char * removeChar(char * str, char c){
 
 int main() {
 
+
     const char * str = "https://www.google.com:8080/search/thing/that?q=32&34%%20#subfragment";
 
     char * qc = "  \"https://www.google.com:8080/search/thing/that?q=32&34%%20#subfragment'";

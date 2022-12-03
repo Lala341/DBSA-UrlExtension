@@ -24,9 +24,6 @@
 
 PG_MODULE_MAGIC;
 
-const unsigned int HTTPS = 443;
-const unsigned int HTTP = 8080;
-
 // typedef struct
 // {
 //     char protocol[FLEXIBLE_ARRAY_MEMBER];
@@ -37,12 +34,45 @@ const unsigned int HTTP = 8080;
 //     char fragment[FLEXIBLE_ARRAY_MEMBER];
 // } URL;
 
-typedef struct
-{
-    char *protocol;
-    char *host;
-    unsigned int port;
-    char *path;
-    char *query;
-    char *fragment;
+// typedef struct
+// {
+//     char *protocol;
+//     char *host;
+//     unsigned int port;
+//     char *path;
+//     char *query;
+//     char *fragment;
+// } URL;
+
+typedef struct {
+  char vl_len_[4];
+  int protocol;
+  int host;
+  unsigned port;
+  int path;
+  int query;
+  int fragment;
+  char data[1];
 } URL;
+
+typedef struct varlena VAR_ARR;
+
+/*
+ * - Copies the fragment of url to the url destination
+ * - Returns an incremented offset to next fragment
+ */
+int copyString(URL *url, int *dest, char* src, int size, int offset) {
+    int s = size + 1;
+    memset(url->data + offset, 0, s);
+    *dest = s;
+    memcpy(url->data + offset, src, s);
+    return offset + s;
+}
+
+static int extract_port_from_protocol(char *protocol) {
+  if (strcasecmp(protocol, "http") == 0) return 8080;
+  if (strcasecmp(protocol, "https") == 0) return 443;
+  if (strcasecmp(protocol, "ftp") == 0) return 21;
+  if (strcasecmp(protocol, "ssh") == 0) return 22;
+  return 0;
+}
