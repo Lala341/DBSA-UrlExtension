@@ -61,69 +61,106 @@ static URL* build_url_with_all_parts(char *protocol, char *host, unsigned port, 
 
 URL * url_constructor_spec(char* spec){
 
-
-  
-    regex_t rx_p;
-    int rc_p;
-    regmatch_t pmatch[8];
-    char msg_p[100];
-    const char *p_regex ="^(.*):\\/\\/([A-Za-z0-9\\-\\.]+):?([0-9]{1,4})?(\\/[A-Za-z0-9]+)*\\/?(\\?[A-Za-z0-9&=]+)*(\\#[A-Za-z0-9]+)*";
-
-    if (0 != (rc_p = regcomp(&rx_p, p_regex, REG_EXTENDED))) {
-
-        regerror(rc_p, &rx_p, msg_p, 100); ereport(
-            ERROR,
-            (
-                errcode(ERRCODE_INVALID_TEXT_REPRESENTATION),
-                errmsg("Internal REGEX error in URL (Error Code: %d): \"%s\"", rc_p, msg_p)
-            )
-        );
-    }
-
-    
-    if (0 != (rc_p = regexec(&rx_p, spec, 8, pmatch, 0))) {
-
-        ereport(
-            ERROR,
-            (
-                errcode(ERRCODE_INVALID_TEXT_REPRESENTATION),
-                errmsg("Invalid URL pattern provided (Error Code: %d): \"%s\"", rc_p, spec)
-            )
-        );
-    }
-    //check each part
-    int pos_protocol=1;
-    int pos_host=2;
-    int current=2;
-    
-    int port_c = check_regex_part(false,spec, "^(.*):\\/\\/([A-Za-z0-9\\-\\.]+):([0-9]{1,4})(\\/[A-Za-z0-9]+)*\\/?(\\?[A-Za-z0-9&=]+)*(\\#[A-Za-z0-9]+)*");
-
-    int pos_port=current+port_c;
-    current=pos_port;
-
-    int path_c = check_regex_part(false,spec, "^(.*):\\/\\/([A-Za-z0-9\\-\\.]+):?([0-9]{1,4})?(\\/[A-Za-z0-9]+)+\\/?(\\?[A-Za-z0-9&=]+)*(\\#[A-Za-z0-9]+)*");
-    int pos_path=current+path_c;
-    current=pos_path;
-
-    int query_c = check_regex_part(false,spec, "^(.*):\\/\\/([A-Za-z0-9\\-\\.]+):?([0-9]{1,4})?(\\/[A-Za-z0-9]+)*\\/?(\\?[A-Za-z0-9&=]+)+(\\#[A-Za-z0-9]+)*");
-    int pos_query=current+query_c;
-    current=pos_query;
-
-    int fragment_c = check_regex_part(false,spec, "^(.*):\\/\\/([A-Za-z0-9\\-\\.]+):?([0-9]{1,4})?(\\/[A-Za-z0-9]+)*\\/?(\\?[A-Za-z0-9&=]+)*(\\#[A-Za-z0-9]+)+");
-    int pos_fragment=current+fragment_c;
-
-   
-    char *protocol = removeChar(extractStr(pmatch[pos_protocol], spec), ':');
-    char *host = extractStr(pmatch[pos_host], spec);
-    unsigned int port = 0;
-    if(port_c>0){port = atoi(removeChar(extractStr(pmatch[pos_port], spec), ':'));}
+    char *protocol = "";
+    char *host = "";
+    unsigned port  = 0;
     char *path = "";
-    if(path_c>0){path = extractStr(pmatch[pos_path], spec);}
     char *query = "";
-    if(query_c>0){query =removeChar(extractStr(pmatch[pos_query], spec), '?');}
     char *fragment = "";
-    if(fragment_c>0){fragment =removeChar(extractStr(pmatch[pos_fragment], spec),'#');}
 
+       
+    bool general = check_regex_part(true,spec, "^(.*):\\/\\/([A-Za-z0-9\\-\\.]+):?([0-9]{1,4})?(\\/[A-Za-z0-9]+)*\\/?(\\?[A-Za-z0-9&=]+)*(\\#[A-Za-z0-9]+)*");
+
+    //check each part
+    bool port_c = check_regex_part(false,spec, "^(.*):\\/\\/([A-Za-z0-9\\-\\.]+):([0-9]{1,4})(\\/[A-Za-z0-9]+)*\\/?(\\?[A-Za-z0-9&=]+)*(\\#[A-Za-z0-9]+)*");
+    
+    bool has_path_division_c = check_regex_part(false,spec, "^(.*):\\/\\/([A-Za-z0-9\\-\\.]+):?([0-9]{1,4})?\\/([A-Za-z0-9]+)*\\/?(\\?[A-Za-z0-9&=]+)*(\\#[A-Za-z0-9]+)*");
+
+    bool path_c = check_regex_part(false,spec, "^(.*):\\/\\/([A-Za-z0-9\\-\\.]+):?([0-9]{1,4})?(\\/[A-Za-z0-9]+)+\\/?(\\?[A-Za-z0-9&=]+)*(\\#[A-Za-z0-9]+)*");
+    bool query_c = check_regex_part(false,spec, "^(.*):\\/\\/([A-Za-z0-9\\-\\.]+):?([0-9]{1,4})?(\\/[A-Za-z0-9]+)*\\/?(\\?[A-Za-z0-9&=]+)+(\\#[A-Za-z0-9]+)*");
+    bool fragment_c = check_regex_part(false,spec, "^(.*):\\/\\/([A-Za-z0-9\\-\\.]+):?([0-9]{1,4})?(\\/[A-Za-z0-9]+)*\\/?(\\?[A-Za-z0-9&=]+)*(\\#[A-Za-z0-9]+)+");
+    
+
+    // Protocol
+    char *p;
+    p = strtokm(spec, "://");
+    if(p)
+    {
+        protocol=p;
+    }
+    p = strtokm(NULL, "://");
+    if(p){
+        bool previoussplit=false;
+
+        const char *tempport=stripString(p);
+        char *charactersplit="/";
+
+        if(has_path_division_c==false){
+            charactersplit="?";
+            if(query_c==false){
+                charactersplit="#";
+            }
+            previoussplit=true;
+        }
+       p = strtok(p, charactersplit);
+       if(p){
+
+        if(p&&port_c==false){
+           host=p;
+        }
+        tempport=stripString(p);
+        p=strtok(NULL, "");
+
+       }
+            
+        const char *data=stripString(p);
+        if(p){
+            data=stripString(p);
+        }
+        if(p&&port_c==true){
+            tempport = strtok(tempport, ":");  
+            host=tempport;
+            tempport = strtok(NULL, "");  
+            port=atoi(tempport);
+        }
+        
+        if(p&&previoussplit==true){
+            psprintf(p, "%s%s",charactersplit,data);
+        }
+       
+        if(p){
+            char *tempquery=p;
+            char *charactersplit="?";
+            if(query_c==false){
+                charactersplit="#";
+            }
+            p = stripString(strtok(tempquery, charactersplit));
+        }
+            if(p&&path_c==true){
+                path=p; 
+                p = strtok(NULL, "");
+            }
+               
+            if(p&&query_c==true){
+                
+                if(fragment_c==false){
+                    query=p;
+                }
+            }
+             if(p&&fragment_c==true){
+                
+                char *tempquery=stripString(p);
+                p = strtok(tempquery, "#");
+
+                if(query_c==true){
+                    query=p;
+                    p = strtok(NULL, "");
+
+                }
+                fragment= p;
+        }
+       
+    }
 
     elog(INFO,"protocol: %s", protocol);
     elog(INFO,"host: %s", host);
@@ -135,7 +172,6 @@ URL * url_constructor_spec(char* spec){
     
     URL *url = build_url_with_all_parts(protocol, host, port, path, query, fragment);
     
-    regfree(&rx_p);
 
     return url;
 }   
