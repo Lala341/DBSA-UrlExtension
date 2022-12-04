@@ -102,22 +102,10 @@ bool compairChars(char * str1, char * str2, int len){
     return true;
 }
 
-// TODO delete before submitting
-void test() {
-    ereport(
-            ERROR,
-            (errcode(ERRCODE_INVALID_TEXT_REPRESENTATION),
-            errmsg("TEST"))
-        );
-}
-
 unsigned num_digits(const unsigned n) {
     if (n < 10) return 1;
     return 1 + num_digits(n / 10);
 }
-
-
-
 
 bool check_regex_part(bool showerror, char* str, char* data){
 

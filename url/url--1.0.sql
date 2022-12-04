@@ -48,14 +48,10 @@ COMMENT ON TYPE url IS 'text written in url: [0-9A-Z]+';
 -- CREATE CAST (text as url) WITH FUNCTION url(text) AS IMPLICIT;
 -- CREATE CAST (url as cstring) WITH FUNCTION text(url);
 
-
--- to be continue --start
 CREATE OR REPLACE FUNCTION get_authority(url)
 RETURNS cstring
 AS '$libdir/url', 'get_authority'
 LANGUAGE C IMMUTABLE STRICT;
-
-/*
 
 CREATE OR REPLACE FUNCTION get_file(url)
 RETURNS cstring
@@ -97,11 +93,7 @@ RETURNS cstring
 AS '$libdir/url', 'get_ref'
 LANGUAGE C IMMUTABLE STRICT;
 
--- TODO replace text with URL data type 
-CREATE OR REPLACE FUNCTION equals(text, text)
+CREATE OR REPLACE FUNCTION equals(url, url)
 RETURNS boolean
 AS '$libdir/url', 'equals'
 LANGUAGE C IMMUTABLE STRICT;
--- to be continue --finish
-
-*/

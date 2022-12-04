@@ -303,8 +303,6 @@ Datum get_protocol(PG_FUNCTION_ARGS)
 //     PG_RETURN_CSTRING(url->protocol);
 // }
 
-
-// To be continue --start
 PG_FUNCTION_INFO_V1(get_authority);
 Datum get_authority(PG_FUNCTION_ARGS)
 {
@@ -325,110 +323,152 @@ Datum get_authority(PG_FUNCTION_ARGS)
     PG_RETURN_CSTRING( result );
 }
 
-
-/*
-
 PG_FUNCTION_INFO_V1(get_file);
 Datum get_file(PG_FUNCTION_ARGS)
 {
-    const URL *url = (URL *) PG_GETARG_POINTER(0);
-    if(url->path != "" && url->query != "")
-        PG_RETURN_CSTRING( psprintf("%s?%s", url->path, url->query) );
-    if(url->path != "")
-        PG_RETURN_CSTRING( psprintf("%s", url->path) );
-    if(url->query != "")
-        PG_RETURN_CSTRING( psprintf("?%s", url->query) );
-    PG_RETURN_CSTRING("");
+    VAR_ARR* input_arr = (VAR_ARR*) PG_GETARG_VARLENA_P(0);
+    URL *url = (URL *)(&(input_arr->vl_dat));
+    url = (URL *) pg_detoast_datum(input_arr);
+
+    size_t size = 0;
+
+    if(url->path > 1)       size += url->path;
+    if(url->query > 1)      size += url->query;
+
+    char *result;
+    char *path;
+    result = palloc(size);
+    
+    if(url->path > 1){
+        path = url->data + url->protocol + url->host;
+        result = psprintf("/%s", path);
+    }
+    if(url->query > 1){
+        path = url->data + url->protocol + url->host + url->path;
+        result = psprintf("%s?%s", result, path);
+    }
+    PG_RETURN_CSTRING( result );
 }
 
 PG_FUNCTION_INFO_V1(get_path);
 Datum get_path(PG_FUNCTION_ARGS)
 {
-    const URL *url = (URL *) PG_GETARG_POINTER(0);
-    PG_RETURN_CSTRING( url->path );
+    VAR_ARR* input_arr = (VAR_ARR*) PG_GETARG_VARLENA_P(0);
+    URL *url = (URL *)(&(input_arr->vl_dat));
+    url = (URL *) pg_detoast_datum(input_arr);
+
+    size_t size = 0;
+
+    if(url->path > 1)       size += url->path;
+
+    char *result;
+    char *path;
+
+    result = palloc(size);
+    
+    if(url->path > 1){
+        path = url->data + url->protocol + url->host;
+        PG_RETURN_CSTRING(psprintf("/%s", path));
+    }
+    PG_RETURN_CSTRING( "" );
 }
 
-
-// not working
 PG_FUNCTION_INFO_V1(same_host);
 Datum same_host(PG_FUNCTION_ARGS)
 {
-        PG_RETURN_BOOL( true );
+    VAR_ARR* input_arr1 = (VAR_ARR*) PG_GETARG_VARLENA_P(0);
+    URL *url1 = (URL *)(&(input_arr1->vl_dat));
+    url1 = (URL *) pg_detoast_datum(input_arr1);
 
-    // const URL *url_1 = (URL *) PG_GETARG_POINTER(0);
-    // const URL *url_2 = (URL *) PG_GETARG_POINTER(1);
-    // if (strcmp(namet2, nameIt2) != 0)
-    // if (namet2 != nameIt2)
-    // PG_RETURN_BOOL( true );
+    VAR_ARR* input_arr2 = (VAR_ARR*) PG_GETARG_VARLENA_P(1);
+    URL *url2 = (URL *)(&(input_arr2->vl_dat));
+    url2 = (URL *) pg_detoast_datum(input_arr2);
+
+    if(url1->host != url2->host)
+        PG_RETURN_BOOL( false );
+
+    char *host1 = url1->data + url1->protocol;
+    char *host2 = url2->data + url2->protocol;
+
+    PG_RETURN_BOOL( compairChars(host1, host2, url1->host) );
 }
 
-// not working
 PG_FUNCTION_INFO_V1(get_default_port);
 Datum get_default_port(PG_FUNCTION_ARGS)
 {
-    const URL *url = (URL *) PG_GETARG_POINTER(0);
-    // int j = 0;
-    // char str[6] = {0,0,0,0,0,0};
-    // strncpy(str, url->protocol, 6);
-    
-    // char ch;
-    // while (str[j]) {
-        
-    //     ch = str[j];
-    //     putchar(toupper(ch));
-    //     j++;
-    // }
-    if (url->protocol == "HTTP") 
-        PG_RETURN_INT32( 80 );
-    if (url->protocol == "HTTPS") 
-        PG_RETURN_INT32( 443 );
-    if (url->protocol == "FTP") 
-        PG_RETURN_INT32( 21 );
-    PG_RETURN_INT32( 0 );
+    VAR_ARR* input_arr = (VAR_ARR*) PG_GETARG_VARLENA_P(0);
+    URL *url = (URL *)(&(input_arr->vl_dat));
+    url = (URL *) pg_detoast_datum(input_arr);
+    int defaultPort = extract_port_from_protocol(url->data);
+    PG_RETURN_INT32( defaultPort == 0 ? -1 : defaultPort );
 }
 
 PG_FUNCTION_INFO_V1(get_host);
 Datum get_host(PG_FUNCTION_ARGS)
 {
-    const URL *url = (URL *) PG_GETARG_POINTER(0);
-    PG_RETURN_CSTRING( url->host );
+    VAR_ARR* input_arr = (VAR_ARR*) PG_GETARG_VARLENA_P(0);
+    URL *url = (URL *)(&(input_arr->vl_dat));
+    url = (URL *) pg_detoast_datum(input_arr);
+    
+    PG_RETURN_CSTRING( psprintf("%s", url->data + url->protocol));
 }
 
 PG_FUNCTION_INFO_V1(get_port);
 Datum get_port(PG_FUNCTION_ARGS)
 {
-    const URL *url = (URL *) PG_GETARG_POINTER(0);
-    PG_RETURN_INT32( url->port );
+    VAR_ARR* input_arr = (VAR_ARR*) PG_GETARG_VARLENA_P(0);
+    URL *url = (URL *)(&(input_arr->vl_dat));
+    url = (URL *) pg_detoast_datum(input_arr);
+
+    PG_RETURN_INT32( url->port > 0 ? url->port : -1 );
 }
 
 PG_FUNCTION_INFO_V1(get_query);
 Datum get_query(PG_FUNCTION_ARGS)
 {
-    const URL *url = (URL *) PG_GETARG_POINTER(0);
-    PG_RETURN_CSTRING( url->query );
+    VAR_ARR* input_arr = (VAR_ARR*) PG_GETARG_VARLENA_P(0);
+    URL *url = (URL *)(&(input_arr->vl_dat));
+    url = (URL *) pg_detoast_datum(input_arr);
+
+    if(url->query > 1){
+        char *query = url->data + url->protocol + url->host + url->path;
+        PG_RETURN_CSTRING( psprintf("%s", query) );
+    }
+    PG_RETURN_CSTRING( "" );
 }
 
 PG_FUNCTION_INFO_V1(get_ref);
 Datum get_ref(PG_FUNCTION_ARGS)
 {
-    const URL *url = (URL *) PG_GETARG_POINTER(0);
-    PG_RETURN_CSTRING( url->fragment );
+    VAR_ARR* input_arr = (VAR_ARR*) PG_GETARG_VARLENA_P(0);
+    URL *url = (URL *)(&(input_arr->vl_dat));
+    url = (URL *) pg_detoast_datum(input_arr);
+
+    if(url->fragment > 1){
+        char *ref = url->data + url->protocol + url->host + url->path + url->query;
+        PG_RETURN_CSTRING( psprintf("%s", ref) );
+    }
+    PG_RETURN_CSTRING( "" );
 }
 
 
 PG_FUNCTION_INFO_V1(equals);
 Datum equals(PG_FUNCTION_ARGS)
 {
-    text *txt1 = PG_GETARG_TEXT_P(0);
-    text *txt2 = PG_GETARG_TEXT_P(1);
-    char *str1 = DatumGetCString( DirectFunctionCall1(textout, PointerGetDatum(txt1) ) );
-    char *str2 = DatumGetCString( DirectFunctionCall1(textout, PointerGetDatum(txt2) ) );
+    VAR_ARR* input_arr1 = (VAR_ARR*) PG_GETARG_VARLENA_P(0);
+    URL *url1 = (URL *)(&(input_arr1->vl_dat));
+    url1 = (URL *) pg_detoast_datum(input_arr1);
+
+    VAR_ARR* input_arr2 = (VAR_ARR*) PG_GETARG_VARLENA_P(1);
+    URL *url2 = (URL *)(&(input_arr2->vl_dat));
+    url2 = (URL *) pg_detoast_datum(input_arr2);
+
+    char *str1 = url_to_str( url1 );
+    char *str2 = url_to_str( url2 );
+    
     int len = strlen(str1);
     if(len != strlen(str2))
         PG_RETURN_BOOL( false );
     PG_RETURN_BOOL( compairChars(str1, str2, len) );
 }
 
-// To be continue --finish
-
-*/
