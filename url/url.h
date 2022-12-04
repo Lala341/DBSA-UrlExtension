@@ -39,9 +39,10 @@ const unsigned int HTTP = 8080;
 
 typedef struct
 {
+    char *full;
     char *protocol;
     char *host;
-    unsigned int port;
+    char *port;
     char *path;
     char *query;
     char *fragment;

@@ -101,9 +101,96 @@ char * extractStr(regmatch_t pmatch, const char *str) {
     return dest;
 }
 
+char * extractStrF(regmatch_t pmatch, const char *str) {
+    int len = pmatch.rm_eo - pmatch.rm_so;
+    char *copy =(char *) palloc0( (len) * sizeof(char));
+    copy=str;
+   char *dest = (char *) palloc0( (len) * sizeof(char));
+   if(pmatch.rm_so==0){
+   strncpy(dest, copy , pmatch.rm_eo );
+
+   }else{
+       strncpy(dest, copy + pmatch.rm_so, pmatch.rm_eo - pmatch.rm_so);
+
+   }
+return dest;
+}
+
+bool compairChars(char * str1, char * str2, int len){
+    for(int i=0; i<len; i++)
+        if(str1[i] != str2[i]) 
+            return false;
+    return true;
+}
+
 char * copyStr(const char *source) {
     size_t len = strlen(source) + 1;
     char *dest = (char *) palloc0( len * sizeof(char));
     strncpy(dest, source, len);
     return dest;
+}
+
+
+
+bool check_regex_part(bool showerror, char* str, char* data){
+
+    char *spec = stripString(str);
+    regex_t rx_p;
+    int rc_p;
+    regmatch_t pmatch_p[2];
+    char msg_p[100];
+    const char *p_regex =data;
+
+    if (0 != (rc_p = regcomp(&rx_p, p_regex, REG_EXTENDED))) {
+
+        regerror(rc_p, &rx_p, msg_p, 100); ereport(
+            ERROR,
+            (
+                errcode(ERRCODE_INVALID_TEXT_REPRESENTATION),
+                errmsg("Internal REGEX error in URL (Error Code: %d): \"%s\"", rc_p, msg_p)
+            )
+        );
+    }
+
+    
+    if (0 != (rc_p = regexec(&rx_p, spec, 2, pmatch_p, 0))) {
+
+        if(showerror==true){
+             ereport(
+            ERROR,
+            (
+                errcode(ERRCODE_INVALID_TEXT_REPRESENTATION),
+                errmsg("Invalid URL pattern provided (Error Code: %d): \"%s\"", rc_p, spec)
+            )
+        );
+        }
+     //  pfree(pmatch_p);
+       return false;
+    }
+  //  pfree(pmatch_p);
+    return true;
+
+}
+
+char *strtokm(char *str, const char *delim)
+{
+    static char *tok;
+    static char *next;
+    char *m;
+
+    if (delim == NULL) return NULL;
+
+    tok = (str) ? str : next;
+    if (tok == NULL) return NULL;
+
+    m = strstr(tok, delim);
+
+    if (m) {
+        next = m + strlen(delim);
+        *m = '\0';
+    } else {
+        next = NULL;
+    }
+
+    return tok;
 }

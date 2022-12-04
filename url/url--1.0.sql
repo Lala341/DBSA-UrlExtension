@@ -3,13 +3,13 @@
 
 CREATE OR REPLACE FUNCTION url_in(cstring)
 RETURNS url
-AS '$libdir/url', 'url_in'
+AS '$libdir/url'
 LANGUAGE C IMMUTABLE STRICT;
 
 --url_out(url)
 CREATE OR REPLACE FUNCTION url_out(url)
 RETURNS cstring
-AS '$libdir/url', 'url_out'
+AS '$libdir/url'
 LANGUAGE C IMMUTABLE STRICT;
 
 CREATE OR REPLACE FUNCTION url(cstring, cstring, integer, cstring)
@@ -36,12 +36,12 @@ AS '$libdir/url', 'text_to_url'
 LANGUAGE C IMMUTABLE STRICT;
 
 CREATE OR REPLACE FUNCTION text(url)
-RETURNS text
+RETURNS cstring
 AS '$libdir/url', 'url_to_text'
 LANGUAGE C IMMUTABLE STRICT;
 
-CREATE CAST (text as url) WITH FUNCTION url(text) AS IMPLICIT;
-CREATE CAST (url as text) WITH FUNCTION text(url);
+-- CREATE CAST (text as url) WITH FUNCTION url(text) AS IMPLICIT;
+-- CREATE CAST (url as cstring) WITH FUNCTION text(url);
 
 -- to be continue --start
 CREATE OR REPLACE FUNCTION get_authority(url)
@@ -60,7 +60,38 @@ AS '$libdir/url', 'get_path'
 LANGUAGE C IMMUTABLE STRICT;
 
 CREATE OR REPLACE FUNCTION same_host(url, url)
-RETURNS cstring
+RETURNS boolean
 AS '$libdir/url', 'same_host'
+LANGUAGE C IMMUTABLE STRICT;
+
+CREATE OR REPLACE FUNCTION get_default_port(url)
+RETURNS integer
+AS '$libdir/url', 'get_default_port'
+LANGUAGE C IMMUTABLE STRICT;
+
+CREATE OR REPLACE FUNCTION get_host(url)
+RETURNS cstring
+AS '$libdir/url', 'get_host'
+LANGUAGE C IMMUTABLE STRICT;
+
+CREATE OR REPLACE FUNCTION get_port(url)
+RETURNS integer
+AS '$libdir/url', 'get_port'
+LANGUAGE C IMMUTABLE STRICT;
+
+CREATE OR REPLACE FUNCTION get_query(url)
+RETURNS cstring
+AS '$libdir/url', 'get_query'
+LANGUAGE C IMMUTABLE STRICT;
+
+CREATE OR REPLACE FUNCTION get_ref(url)
+RETURNS cstring
+AS '$libdir/url', 'get_ref'
+LANGUAGE C IMMUTABLE STRICT;
+
+-- TODO replace text with URL data type 
+CREATE OR REPLACE FUNCTION equals(text, text)
+RETURNS boolean
+AS '$libdir/url', 'equals'
 LANGUAGE C IMMUTABLE STRICT;
 -- to be continue --finish
