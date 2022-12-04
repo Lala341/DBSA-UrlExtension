@@ -111,10 +111,11 @@ URL * url_constructor_spec(char* spec){
 
         }
             
-        const char *data = stripString(p);
-        if(p)
+        const char *data = p;
+        if(p){
+            stripString(p);
             data = stripString(p);
-            
+        }  
         if(p && port_c == true){
             tempport = strtok(tempport, ":");  
             host = tempport;
