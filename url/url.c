@@ -42,7 +42,7 @@ static URL* build_url_with_all_parts(char *protocol, char *host, unsigned port, 
     sizes[3] = strlen(query);
     sizes[4] = strlen(fragment);
 
-    size_t size = VARHDRSZ + 5*4 + sizes[0] + sizes[1] + sizes[2] + sizes[3] + sizes[4] + 3;
+    size_t size = VARHDRSZ + sizes[0] + sizes[1] + sizes[2] + sizes[3] + sizes[4] + 5*6;
     URL *u = (URL *) palloc(size);
     SET_VARSIZE(u, size);
 
@@ -52,10 +52,10 @@ static URL* build_url_with_all_parts(char *protocol, char *host, unsigned port, 
     offset = copyString(u, &u->host, host, sizes[1], offset);
     offset = copyString(u, &u->path, path, sizes[2], offset);
     offset = copyString(u, &u->query, query, sizes[3], offset);
-    copyString(u, &u->fragment, fragment, sizes[4], offset);
+    offset = copyString(u, &u->fragment, fragment, sizes[4], offset);
     
     u->port = port;
-
+    // elog(INFO,"P:%d H:%d, Path:%d, Q:%d, F:%d OFF:%d", u->protocol, u->host, u->path, u->query, u->fragment, offset);
     return u;
 }
 
@@ -84,81 +84,75 @@ URL * url_constructor_spec(char* spec){
     // Protocol
     char *p;
     p = strtokm(spec, "://");
-    if(p)
-    {
-        protocol=p;
-    }
+    if(p) protocol = p;
+    
     p = strtokm(NULL, "://");
     if(p){
-        bool previoussplit=false;
+        bool previoussplit = false;
 
-        const char *tempport=stripString(p);
-        char *charactersplit="/";
+        const char *tempport = stripString(p);
+        char *charactersplit = "/";
 
-        if(has_path_division_c==false){
-            charactersplit="?";
-            if(query_c==false){
-                charactersplit="#";
+        if(has_path_division_c == false){
+            charactersplit = "?";
+            if(query_c == false){
+                charactersplit = "#";
             }
-            previoussplit=true;
+            previoussplit = true;
         }
-       p = strtok(p, charactersplit);
-       if(p){
-
-        if(p&&port_c==false){
-           host=p;
-        }
-        tempport=stripString(p);
-        p=strtok(NULL, "");
-
-       }
-            
-        const char *data=stripString(p);
+        p = strtok(p, charactersplit);
         if(p){
-            data=stripString(p);
+
+            if(p && port_c == false)
+                host = p;
+
+            tempport = stripString(p);
+            p = strtok(NULL, "");
+
         }
-        if(p&&port_c==true){
+            
+        const char *data = stripString(p);
+        if(p)
+            data = stripString(p);
+            
+        if(p && port_c == true){
             tempport = strtok(tempport, ":");  
-            host=tempport;
+            host = tempport;
             tempport = strtok(NULL, "");  
-            port=atoi(tempport);
+            port = atoi(tempport);
         }
         
-        if(p&&previoussplit==true){
-            psprintf(p, "%s%s",charactersplit,data);
+        if(p && previoussplit == true){
+            psprintf(p, "%s%s", charactersplit, data);
         }
        
         if(p){
-            char *tempquery=p;
+            char *tempquery = p;
             char *charactersplit="?";
-            if(query_c==false){
-                charactersplit="#";
+            if(query_c == false){
+                charactersplit = "#";
             }
             p = stripString(strtok(tempquery, charactersplit));
         }
-            if(p&&path_c==true){
-                path=p; 
+            if(p && path_c == true){
+                path = p; 
                 p = strtok(NULL, "");
             }
                
-            if(p&&query_c==true){
-                
-                if(fragment_c==false){
-                    query=p;
-                }
+            if(p && query_c == true){
+                if(fragment_c == false) query = p;
             }
-             if(p&&fragment_c==true){
-                
-                char *tempquery=stripString(p);
+
+            if(p && fragment_c == true){
+                char *tempquery = stripString(p);
                 p = strtok(tempquery, "#");
 
-                if(query_c==true){
-                    query=p;
+                if(query_c == true){
+                    query = p;
                     p = strtok(NULL, "");
-
                 }
-                fragment= p;
-        }
+                fragment = p;
+            }
        
     }
 
@@ -169,10 +163,7 @@ URL * url_constructor_spec(char* spec){
     elog(INFO,"query: %s", query);
     elog(INFO,"fragment: %s", fragment);
 
-    
     URL *url = build_url_with_all_parts(protocol, host, port, path, query, fragment);
-    
-
     return url;
 }   
 
@@ -180,42 +171,41 @@ URL * url_constructor_spec(char* spec){
 
 static inline char* url_to_str(const URL * url)
 {
-    size_t size = url->protocol + url->host + 3; // Extra ://
+    size_t size = url->protocol + url->host + 1; // Extra ://
     // Construct char * from the len fields in url
     char *protocol = url->data;
-    char *host = url->data + url->protocol;
-    char *path = url->data + url->protocol + url->host;
+    char *host = protocol + url->protocol;
+    char *path = host + url->host;
     unsigned port_len = num_digits(url->port);
+    char *query = path + url->path;
+    char *fragment = query + url->query;
 
     char *result;
 
-    if(url->port > 0)       size += port_len + 1;  // For : prefix
-    if(url->path > 0)       size += url->path + 1; // For an extra / prefix
-    if(url->query > 0)      size += url->query + 1; // For an extra ? prefix
-    if(url->fragment > 0)   size += url->fragment + 1;  // For an extra # prefix
+    // Since all url segment contains size + 1, that's why we are not adding an extra + 1 in size
+    // for example path contains an extra size for '\0'
+    if(url->port > 0)       size += port_len;
+    if(url->path > 0)       size += url->path;
+    if(url->query > 0)      size += url->query;
+    if(url->fragment > 0)   size += url->fragment;
 
     // The 5 extra char represents the :// after protocol and : and /
     result = palloc(size);
 
-    if(url->port > 0) {
+    if(url->port > 0)
         result = psprintf("%s://%s:%d", protocol, host, url->port);
-    } else {
+    else
         result = psprintf("%s://%s", protocol, host);
-    }
 
-    if(url->path > 0) {
+    if(url->path > 0)
         result = psprintf("%s/%s", result, path);
-    }
 
-    if(url->query > 0){
-        char *query = path + url->query;
+    if(url->query > 0)
         result = psprintf("%s?%s", result, query);
-    }
 
-    if(url->fragment > 0){
-        char *fragment = path + url->query + url->fragment;
+    if(url->fragment > 0)
         result = psprintf("%s#%s", result, fragment);
-    }
+
     return result;
 }
 
