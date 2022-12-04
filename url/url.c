@@ -125,12 +125,12 @@ URL * url_constructor_spec(char* spec){
     if(fragment_c>0){fragment =removeChar(extractStr(pmatch[pos_fragment], spec),'#');}
 
 
-   // ereport(NOTICE,errmsg("protocol: %s", protocol));
-  //  ereport(NOTICE,errmsg("host: %s", host));
-  //  ereport(NOTICE,errmsg("port: %d", port));
-  //  ereport(NOTICE,errmsg("path: %s", path));
-  //  ereport(NOTICE,errmsg("query: %s", query));
-  //  ereport(NOTICE,errmsg("fragment: %s", fragment));
+    elog(INFO,"protocol: %s", protocol);
+    elog(INFO,"host: %s", host);
+    elog(INFO,"port: %d", port);
+    elog(INFO,"path: %s", path);
+    elog(INFO,"query: %s", query);
+    elog(INFO,"fragment: %s", fragment);
 
     
     URL *url = build_url_with_all_parts(protocol, host, port, path, query, fragment);
