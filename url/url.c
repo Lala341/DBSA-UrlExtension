@@ -61,49 +61,82 @@ static URL* build_url_with_all_parts(char *protocol, char *host, unsigned port, 
 
 URL * url_constructor_spec(char* spec){
 
-    regex_t rx;
-    int rc;
-    char msg[100];
-    const char *string_regex ="^(.*):\\/\\/([A-Za-z0-9\\-\\.]+):?([0-9]{2,4})?((\\/[A-Za-z0-9]+)*)*\\/?(\\?[A-Za-z0-9]+\\=[A-Za-z0-9]+(\\&[A-Za-z0-9]+\\=[A-Za-z0-9]+)*)*(\\#[A-Za-z0-9]+)*";
 
-    if (0 != (rc = regcomp(&rx, string_regex, REG_EXTENDED))) {
+  
+    regex_t rx_p;
+    int rc_p;
+    regmatch_t pmatch[8];
+    char msg_p[100];
+    const char *p_regex ="^(.*):\\/\\/([A-Za-z0-9\\-\\.]+):?([0-9]{1,4})?(\\/[A-Za-z0-9]+)*\\/?(\\?[A-Za-z0-9&=]+)*(\\#[A-Za-z0-9]+)*";
 
-        regerror(rc, &rx, msg, 100);
-        ereport(
+    if (0 != (rc_p = regcomp(&rx_p, p_regex, REG_EXTENDED))) {
+
+        regerror(rc_p, &rx_p, msg_p, 100); ereport(
             ERROR,
             (
                 errcode(ERRCODE_INVALID_TEXT_REPRESENTATION),
-                errmsg("Internal REGEX error in URL (Error Code: %d): \"%s\"", rc, msg)
+                errmsg("Internal REGEX error in URL (Error Code: %d): \"%s\"", rc_p, msg_p)
             )
         );
     }
 
-    size_t match_count = rx.re_nsub + 1;
-    regmatch_t *pmatch = calloc(sizeof(regmatch_t), match_count);
-    // size_t match_count = 9;
-    // regmatch_t pmatch[9];
+    
+    if (0 != (rc_p = regexec(&rx_p, spec, 8, pmatch, 0))) {
 
-    if (0 != (rc = regexec(&rx, spec, match_count, pmatch, 0))) {
         ereport(
             ERROR,
             (
                 errcode(ERRCODE_INVALID_TEXT_REPRESENTATION),
-                errmsg("Invalid URL pattern provided (Error Code: %d): \"%s\"", rc, spec)
+                errmsg("Invalid URL pattern provided (Error Code: %d): \"%s\"", rc_p, spec)
             )
         );
     }
+    //check each part
+    int pos_protocol=1;
+    int pos_host=2;
+    int current=2;
+    
+    int port_c = check_regex_part(false,spec, "^(.*):\\/\\/([A-Za-z0-9\\-\\.]+):([0-9]{1,4})(\\/[A-Za-z0-9]+)*\\/?(\\?[A-Za-z0-9&=]+)*(\\#[A-Za-z0-9]+)*");
 
-    char *protocol = removeChar(extractStr(pmatch[1], spec), ':');
-    char *host = extractStr(pmatch[2], spec);
-    unsigned port  = atoi(removeChar(extractStr(pmatch[3], spec), ':'));
-    char *path = extractStr(pmatch[4], spec);
-    char *query = removeChar(extractStr(pmatch[6], spec), '?');
-    char *fragment = removeChar(extractStr(pmatch[8], spec),'#');
+    int pos_port=current+port_c;
+    current=pos_port;
+
+    int path_c = check_regex_part(false,spec, "^(.*):\\/\\/([A-Za-z0-9\\-\\.]+):?([0-9]{1,4})?(\\/[A-Za-z0-9]+)+\\/?(\\?[A-Za-z0-9&=]+)*(\\#[A-Za-z0-9]+)*");
+    int pos_path=current+path_c;
+    current=pos_path;
+
+    int query_c = check_regex_part(false,spec, "^(.*):\\/\\/([A-Za-z0-9\\-\\.]+):?([0-9]{1,4})?(\\/[A-Za-z0-9]+)*\\/?(\\?[A-Za-z0-9&=]+)+(\\#[A-Za-z0-9]+)*");
+    int pos_query=current+query_c;
+    current=pos_query;
+
+    int fragment_c = check_regex_part(false,spec, "^(.*):\\/\\/([A-Za-z0-9\\-\\.]+):?([0-9]{1,4})?(\\/[A-Za-z0-9]+)*\\/?(\\?[A-Za-z0-9&=]+)*(\\#[A-Za-z0-9]+)+");
+    int pos_fragment=current+fragment_c;
+
+   
+    char *protocol = removeChar(extractStr(pmatch[pos_protocol], spec), ':');
+    char *host = extractStr(pmatch[pos_host], spec);
+    unsigned int port = 0;
+    if(port_c>0){port = atoi(removeChar(extractStr(pmatch[pos_port], spec), ':'));}
+    char *path = "";
+    if(path_c>0){path = extractStr(pmatch[pos_path], spec);}
+    char *query = "";
+    if(query_c>0){query =removeChar(extractStr(pmatch[pos_query], spec), '?');}
+    char *fragment = "";
+    if(fragment_c>0){fragment =removeChar(extractStr(pmatch[pos_fragment], spec),'#');}
+
+
+   // ereport(NOTICE,errmsg("protocol: %s", protocol));
+  //  ereport(NOTICE,errmsg("host: %s", host));
+  //  ereport(NOTICE,errmsg("port: %d", port));
+  //  ereport(NOTICE,errmsg("path: %s", path));
+  //  ereport(NOTICE,errmsg("query: %s", query));
+  //  ereport(NOTICE,errmsg("fragment: %s", fragment));
 
     
     URL *url = build_url_with_all_parts(protocol, host, port, path, query, fragment);
     
-    regfree(&rx);
+    regfree(&rx_p);
+
     return url;
 }   
 
