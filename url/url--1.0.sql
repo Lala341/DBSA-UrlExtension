@@ -93,6 +93,16 @@ RETURNS cstring
 AS '$libdir/url', 'get_ref'
 LANGUAGE C IMMUTABLE STRICT;
 
+CREATE OR REPLACE FUNCTION same_file(url, url)
+RETURNS boolean
+AS '$libdir/url', 'same_file'
+LANGUAGE C IMMUTABLE STRICT;
+
+CREATE OR REPLACE FUNCTION get_user_info(url)
+RETURNS cstring
+AS '$libdir/url', 'get_user_info'
+LANGUAGE C IMMUTABLE STRICT;
+
 -- ---------- ---------- ---------- ---------- ---------- ---------- ----------
 -- B-Tree Functions
 -- For sorting and grouping
@@ -128,6 +138,7 @@ RETURNS boolean
 AS '$libdir/url', 'url_greater_than_equal'
 LANGUAGE C IMMUTABLE STRICT;
 
+<<<<<<< HEAD
 CREATE OR REPLACE FUNCTION url_compare(url, url)
 RETURNS integer
 AS '$libdir/url', 'url_compare'
@@ -191,3 +202,4 @@ CREATE OPERATOR CLASS url_ops
         OPERATOR        4       >= ,
         OPERATOR        5       > ,
         FUNCTION        1       url_compare(url, url);
+

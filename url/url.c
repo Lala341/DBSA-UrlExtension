@@ -25,6 +25,7 @@ static URL* build_url_with_port(char *protocol, char *host, unsigned port, char 
     offset = copyString(u, &u->host, host, sizes[1], offset);
     offset = copyString(u, &u->path, path, sizes[2], offset);
     // Reset other fields, otherwise it would reference other memory parts thus leading to crash
+    u->userinfo=0;
     u->query = 0;
     u->fragment = 0;
     u->port = port;
@@ -32,27 +33,29 @@ static URL* build_url_with_port(char *protocol, char *host, unsigned port, char 
     return u;
 }
 
-static URL* build_url_with_all_parts(char *protocol, char *host, unsigned port, char *path, char *query, char *fragment){
+static URL* build_url_with_all_parts(char *protocol, char *userinfo, char *host, unsigned port, char *path, char *query, char *fragment){
 	
     // Sizes = (0:Protocol, 1:Host, 2:Path, 3:Query, 4:Fragment)
-    int sizes[5];
+    int sizes[6];
     sizes[0] = strlen(protocol);
-    sizes[1] = strlen(host);
-    sizes[2] = strlen(path);
-    sizes[3] = strlen(query);
-    sizes[4] = strlen(fragment);
+    sizes[1] = strlen(userinfo);
+    sizes[2] = strlen(host);
+    sizes[3] = strlen(path);
+    sizes[4] = strlen(query);
+    sizes[5] = strlen(fragment);
 
-    size_t size = VARHDRSZ + sizes[0] + sizes[1] + sizes[2] + sizes[3] + sizes[4] + 5*6;
+    size_t size = VARHDRSZ + sizes[0] + sizes[1] + sizes[2] + sizes[3] + sizes[4] + sizes[5] + 5*6;
     URL *u = (URL *) palloc(size);
     SET_VARSIZE(u, size);
 
     int offset = 0;
 
     offset = copyString(u, &u->protocol, protocol, sizes[0], offset);
-    offset = copyString(u, &u->host, host, sizes[1], offset);
-    offset = copyString(u, &u->path, path, sizes[2], offset);
-    offset = copyString(u, &u->query, query, sizes[3], offset);
-    offset = copyString(u, &u->fragment, fragment, sizes[4], offset);
+    offset = copyString(u, &u->userinfo, userinfo, sizes[1], offset);
+    offset = copyString(u, &u->host, host, sizes[2], offset);
+    offset = copyString(u, &u->path, path, sizes[3], offset);
+    offset = copyString(u, &u->query, query, sizes[4], offset);
+    offset = copyString(u, &u->fragment, fragment, sizes[5], offset);
     
     u->port = port;
     // elog(INFO,"P:%d H:%d, Path:%d, Q:%d, F:%d OFF:%d", u->protocol, u->host, u->path, u->query, u->fragment, offset);
@@ -62,6 +65,7 @@ static URL* build_url_with_all_parts(char *protocol, char *host, unsigned port, 
 URL * url_constructor_spec(char* spec){
 
     char *protocol = "";
+    char *userinfo = "";
     char *host = "";
     unsigned port  = 0;
     char *path = "";
@@ -69,16 +73,18 @@ URL * url_constructor_spec(char* spec){
     char *fragment = "";
 
        
-    bool general = check_regex_part(true,spec, "^(.*):\\/\\/([A-Za-z0-9\\-\\.]+):?([0-9]{1,4})?(\\/[A-Za-z0-9]+)*\\/?(\\?[A-Za-z0-9&=]+)*(\\#[A-Za-z0-9]+)*");
+    bool general = check_regex_part(true,spec, "^(.*):\\/\\/([A-Za-z0-9\\-\\.\\:]+@)?([A-Za-z0-9\\-\\.]+):?([0-9]{1,4})?(\\/[A-Za-z0-9]+)*\\/?(\\?[A-Za-z0-9&=]+)*(\\#[A-Za-z0-9]+)*");
+
+    bool userinfo_c = check_regex_part(false,spec, "^(.*):\\/\\/([A-Za-z0-9\\-\\.\\:]+@)([A-Za-z0-9\\-\\.]+):?([0-9]{1,4})?(\\/[A-Za-z0-9]+)*\\/?(\\?[A-Za-z0-9&=]+)*(\\#[A-Za-z0-9]+)*");
 
     //check each part
-    bool port_c = check_regex_part(false,spec, "^(.*):\\/\\/([A-Za-z0-9\\-\\.]+):([0-9]{1,4})(\\/[A-Za-z0-9]+)*\\/?(\\?[A-Za-z0-9&=]+)*(\\#[A-Za-z0-9]+)*");
+    bool port_c = check_regex_part(false,spec, "^(.*):\\/\\/([A-Za-z0-9\\-\\.\\:]+@)?([A-Za-z0-9\\-\\.]+):([0-9]{1,4})(\\/[A-Za-z0-9]+)*\\/?(\\?[A-Za-z0-9&=]+)*(\\#[A-Za-z0-9]+)*");
     
-    bool has_path_division_c = check_regex_part(false,spec, "^(.*):\\/\\/([A-Za-z0-9\\-\\.]+):?([0-9]{1,4})?\\/([A-Za-z0-9]+)*\\/?(\\?[A-Za-z0-9&=]+)*(\\#[A-Za-z0-9]+)*");
+    bool has_path_division_c = check_regex_part(false,spec, "^(.*):\\/\\/([A-Za-z0-9\\-\\.\\:]+@)?([A-Za-z0-9\\-\\.]+):?([0-9]{1,4})?\\/([A-Za-z0-9]+)*\\/?(\\?[A-Za-z0-9&=]+)*(\\#[A-Za-z0-9]+)*");
 
-    bool path_c = check_regex_part(false,spec, "^(.*):\\/\\/([A-Za-z0-9\\-\\.]+):?([0-9]{1,4})?(\\/[A-Za-z0-9]+)+\\/?(\\?[A-Za-z0-9&=]+)*(\\#[A-Za-z0-9]+)*");
-    bool query_c = check_regex_part(false,spec, "^(.*):\\/\\/([A-Za-z0-9\\-\\.]+):?([0-9]{1,4})?(\\/[A-Za-z0-9]+)*\\/?(\\?[A-Za-z0-9&=]+)+(\\#[A-Za-z0-9]+)*");
-    bool fragment_c = check_regex_part(false,spec, "^(.*):\\/\\/([A-Za-z0-9\\-\\.]+):?([0-9]{1,4})?(\\/[A-Za-z0-9]+)*\\/?(\\?[A-Za-z0-9&=]+)*(\\#[A-Za-z0-9]+)+");
+    bool path_c = check_regex_part(false,spec, "^(.*):\\/\\/([A-Za-z0-9\\-\\.\\:]+@)?([A-Za-z0-9\\-\\.]+):?([0-9]{1,4})?(\\/[A-Za-z0-9]+)+\\/?(\\?[A-Za-z0-9&=]+)*(\\#[A-Za-z0-9]+)*");
+    bool query_c = check_regex_part(false,spec, "^(.*):\\/\\/([A-Za-z0-9\\-\\.\\:]+@)?([A-Za-z0-9\\-\\.]+):?([0-9]{1,4})?(\\/[A-Za-z0-9]+)*\\/?(\\?[A-Za-z0-9&=]+)+(\\#[A-Za-z0-9]+)*");
+    bool fragment_c = check_regex_part(false,spec, "^(.*):\\/\\/([A-Za-z0-9\\-\\.\\:]+@)?([A-Za-z0-9\\-\\.]+):?([0-9]{1,4})?(\\/[A-Za-z0-9]+)*\\/?(\\?[A-Za-z0-9&=]+)*(\\#[A-Za-z0-9]+)+");
     
 
     // Protocol
@@ -91,6 +97,17 @@ URL * url_constructor_spec(char* spec){
         bool previoussplit = false;
 
         const char *tempport = stripString(p);
+        if(userinfo_c == true){
+            char *charactersplit = "@";
+
+            p = strtok(p, charactersplit);
+            if(p){
+                userinfo = p;
+                tempport = stripString(p);
+                p = strtok(NULL, "");
+            }
+        }
+        
         char *charactersplit = "/";
 
         if(has_path_division_c == false){
@@ -158,13 +175,14 @@ URL * url_constructor_spec(char* spec){
     }
 
     elog(INFO,"protocol: %s", protocol);
+    elog(INFO,"userinfo: %s", userinfo);
     elog(INFO,"host: %s", host);
     elog(INFO,"port: %d", port);
     elog(INFO,"path: %s", path);
     elog(INFO,"query: %s", query);
     elog(INFO,"fragment: %s", fragment);
 
-    URL *url = build_url_with_all_parts(protocol, host, port, path, query, fragment);
+    URL *url = build_url_with_all_parts(protocol, userinfo, host, port, path, query, fragment);
     return url;
 }   
 
@@ -175,7 +193,8 @@ static inline char* url_to_str(const URL * url)
     size_t size = url->protocol + url->host + 1; // Extra ://
     // Construct char * from the len fields in url
     char *protocol = url->data;
-    char *host = protocol + url->protocol;
+    char *userinfo = protocol + url->protocol;
+    char *host = userinfo + url->userinfo;
     char *path = host + url->host;
     unsigned port_len = num_digits(url->port);
     char *query = path + url->path;
@@ -185,6 +204,7 @@ static inline char* url_to_str(const URL * url)
 
     // Since all url segment contains size + 1, that's why we are not adding an extra + 1 in size
     // for example path contains an extra size for '\0'
+    if(url->userinfo > 0)   size += url->userinfo;
     if(url->port > 0)       size += port_len;
     if(url->path > 0)       size += url->path;
     if(url->query > 0)      size += url->query;
@@ -193,10 +213,13 @@ static inline char* url_to_str(const URL * url)
     // The 5 extra char represents the :// after protocol and : and /
     result = palloc(size);
 
-    if(url->port > 0)
-        result = psprintf("%s://%s:%d", protocol, host, url->port);
+    if(url->userinfo > 0)
+        result = psprintf("%s://%s@%s", protocol, userinfo, host);
     else
         result = psprintf("%s://%s", protocol, host);
+
+    if(url->port > 0)
+        result = psprintf("%s:%d", result, url->port);
 
     if(url->path > 0)
         result = psprintf("%s/%s", result, path);
@@ -210,6 +233,28 @@ static inline char* url_to_str(const URL * url)
     return result;
 }
 
+static inline char* getFile(const URL * url)
+{
+    size_t size = 0;
+
+    if(url->path > 1)       size += url->path;
+    if(url->query > 1)      size += url->query;
+
+    char *result;
+    char *path;
+    
+    result = palloc(size);
+    
+    if(url->path > 1){
+        path = url->data + url->protocol + url->userinfo + url->host;
+        result = psprintf("/%s", path);
+    }
+    if(url->query > 1){
+        path = url->data + url->protocol + url->userinfo + url->host + url->path;
+        result = psprintf("%s?%s", result, path);
+    }
+    return result;
+}
 /**
  * Constructor of URL
  */
@@ -311,7 +356,7 @@ Datum get_authority(PG_FUNCTION_ARGS)
     url = (URL *) pg_detoast_datum(input_arr);
 
     char *result;
-    char *host = url->data + url->protocol;
+    char *host = url->data + url->protocol + url->userinfo;
     
     if(url->port > 0) {
         result = palloc(url->host + num_digits(url->port) + 2); // 2 for : and \0
@@ -330,24 +375,7 @@ Datum get_file(PG_FUNCTION_ARGS)
     URL *url = (URL *)(&(input_arr->vl_dat));
     url = (URL *) pg_detoast_datum(input_arr);
 
-    size_t size = 0;
-
-    if(url->path > 1)       size += url->path;
-    if(url->query > 1)      size += url->query;
-
-    char *result;
-    char *path;
-    result = palloc(size);
-    
-    if(url->path > 1){
-        path = url->data + url->protocol + url->host;
-        result = psprintf("/%s", path);
-    }
-    if(url->query > 1){
-        path = url->data + url->protocol + url->host + url->path;
-        result = psprintf("%s?%s", result, path);
-    }
-    PG_RETURN_CSTRING( result );
+    PG_RETURN_CSTRING( getFile(url) );
 }
 
 PG_FUNCTION_INFO_V1(get_path);
@@ -357,17 +385,8 @@ Datum get_path(PG_FUNCTION_ARGS)
     URL *url = (URL *)(&(input_arr->vl_dat));
     url = (URL *) pg_detoast_datum(input_arr);
 
-    size_t size = 0;
-
-    if(url->path > 1)       size += url->path;
-
-    char *result;
-    char *path;
-
-    result = palloc(size);
-    
     if(url->path > 1){
-        path = url->data + url->protocol + url->host;
+        char * path = url->data + url->protocol + url->userinfo + url->host;
         PG_RETURN_CSTRING(psprintf("/%s", path));
     }
     PG_RETURN_CSTRING( "" );
@@ -387,8 +406,8 @@ Datum same_host(PG_FUNCTION_ARGS)
     if(url1->host != url2->host)
         PG_RETURN_BOOL( false );
 
-    char *host1 = url1->data + url1->protocol;
-    char *host2 = url2->data + url2->protocol;
+    char *host1 = url1->data + url1->protocol + url1->userinfo;
+    char *host2 = url2->data + url2->protocol + url2->userinfo;
 
     PG_RETURN_BOOL( compairChars(host1, host2, url1->host) );
 }
@@ -410,7 +429,7 @@ Datum get_host(PG_FUNCTION_ARGS)
     URL *url = (URL *)(&(input_arr->vl_dat));
     url = (URL *) pg_detoast_datum(input_arr);
     
-    PG_RETURN_CSTRING( psprintf("%s", url->data + url->protocol));
+    PG_RETURN_CSTRING( psprintf("%s", url->data + url->protocol + url->userinfo));
 }
 
 PG_FUNCTION_INFO_V1(get_port);
@@ -431,7 +450,7 @@ Datum get_query(PG_FUNCTION_ARGS)
     url = (URL *) pg_detoast_datum(input_arr);
 
     if(url->query > 1){
-        char *query = url->data + url->protocol + url->host + url->path;
+        char *query = url->data + url->protocol + url->userinfo + url->host + url->path;
         PG_RETURN_CSTRING( psprintf("%s", query) );
     }
     PG_RETURN_CSTRING( "" );
@@ -445,12 +464,47 @@ Datum get_ref(PG_FUNCTION_ARGS)
     url = (URL *) pg_detoast_datum(input_arr);
 
     if(url->fragment > 1){
-        char *ref = url->data + url->protocol + url->host + url->path + url->query;
+        char *ref = url->data + url->protocol + url->userinfo + url->host + url->path + url->query;
         PG_RETURN_CSTRING( psprintf("%s", ref) );
     }
     PG_RETURN_CSTRING( "" );
 }
 
+PG_FUNCTION_INFO_V1(same_file);
+Datum same_file(PG_FUNCTION_ARGS)
+{
+    VAR_ARR* input_arr1 = (VAR_ARR*) PG_GETARG_VARLENA_P(0);
+    URL *url1 = (URL *)(&(input_arr1->vl_dat));
+    url1 = (URL *) pg_detoast_datum(input_arr1);
+
+    VAR_ARR* input_arr2 = (VAR_ARR*) PG_GETARG_VARLENA_P(1);
+    URL *url2 = (URL *)(&(input_arr2->vl_dat));
+    url2 = (URL *) pg_detoast_datum(input_arr2);
+
+    char *file1 = getFile(url1);
+    char *file2 = getFile(url2);
+
+    int len1 = strlen(file1);
+    int len2 = strlen(file2);
+    if(len1 != len2)
+        PG_RETURN_BOOL( false );
+
+    PG_RETURN_BOOL( compairChars(file1, file2, len1) );
+}
+
+PG_FUNCTION_INFO_V1(get_user_info);
+Datum get_user_info(PG_FUNCTION_ARGS)
+{
+    VAR_ARR* input_arr = (VAR_ARR*) PG_GETARG_VARLENA_P(0);
+    URL *url = (URL *)(&(input_arr->vl_dat));
+    url = (URL *) pg_detoast_datum(input_arr);
+
+    if(url->userinfo > 1){
+        char *userinfo = url->data + url->protocol;
+        PG_RETURN_CSTRING( psprintf("%s", userinfo) );
+    }
+    PG_RETURN_CSTRING( "" );
+}
 
 PG_FUNCTION_INFO_V1(url_equals);
 Datum url_equals(PG_FUNCTION_ARGS)
@@ -516,7 +570,7 @@ Datum url_greater_than(PG_FUNCTION_ARGS)
 
     char *s_left = url_to_str( u_left );
     char *s_right = url_to_str( u_right );
-    
+
     PG_RETURN_BOOL( strcmp(s_left, s_right) > 0);
 }
 
@@ -540,6 +594,6 @@ Datum url_greater_than_equal(PG_FUNCTION_ARGS)
 
     char *s_left = url_to_str( u_left );
     char *s_right = url_to_str( u_right );
-    
+
     PG_RETURN_BOOL( strcmp(s_left, s_right) >= 0);
 }
