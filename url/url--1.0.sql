@@ -93,7 +93,101 @@ RETURNS cstring
 AS '$libdir/url', 'get_ref'
 LANGUAGE C IMMUTABLE STRICT;
 
-CREATE OR REPLACE FUNCTION equals(url, url)
+-- ---------- ---------- ---------- ---------- ---------- ---------- ----------
+-- B-Tree Functions
+-- For sorting and grouping
+-- ---------- ---------- ---------- ---------- ---------- ---------- ----------
+
+CREATE OR REPLACE FUNCTION url_eq(url, url)
 RETURNS boolean
-AS '$libdir/url', 'equals'
+AS '$libdir/url', 'url_equals'
 LANGUAGE C IMMUTABLE STRICT;
+
+CREATE OR REPLACE FUNCTION url_nq(url, url)
+RETURNS boolean
+AS '$libdir/url', 'url_not_equals'
+LANGUAGE C IMMUTABLE STRICT;
+
+CREATE OR REPLACE FUNCTION url_lt(url, url)
+RETURNS boolean
+AS '$libdir/url', 'url_less_than'
+LANGUAGE C IMMUTABLE STRICT;
+
+CREATE OR REPLACE FUNCTION url_gt(url, url)
+RETURNS boolean
+AS '$libdir/url', 'url_greater_than'
+LANGUAGE C IMMUTABLE STRICT;
+
+CREATE OR REPLACE FUNCTION url_lt_eq(url, url)
+RETURNS boolean
+AS '$libdir/url', 'url_less_than_equal'
+LANGUAGE C IMMUTABLE STRICT;
+
+CREATE OR REPLACE FUNCTION url_gt_eq(url, url)
+RETURNS boolean
+AS '$libdir/url', 'url_greater_than_equal'
+LANGUAGE C IMMUTABLE STRICT;
+
+CREATE OR REPLACE FUNCTION url_compare(url, url)
+RETURNS integer
+AS '$libdir/url', 'url_compare'
+LANGUAGE C IMMUTABLE STRICT;
+
+--
+-- Sorting operators for Btree
+--
+
+CREATE OPERATOR = (
+	LEFTARG = url, RIGHTARG = url, PROCEDURE = url_eq,
+	COMMUTATOR = '=', NEGATOR = '<>',
+	RESTRICT = eqsel, JOIN = eqjoinsel
+);
+COMMENT ON OPERATOR =(url, url) IS 'are the both url equal?';
+
+CREATE OPERATOR <> (
+	LEFTARG = url, RIGHTARG = url, PROCEDURE = url_lt,
+	COMMUTATOR = '<>', NEGATOR = '=',
+	RESTRICT = neqsel, JOIN = neqjoinsel
+);
+COMMENT ON OPERATOR <>(url, url) IS 'are the both url not equal?';
+
+CREATE OPERATOR < (
+	LEFTARG = url, RIGHTARG = url, PROCEDURE = url_lt,
+	COMMUTATOR = '>', NEGATOR = '>=',
+	RESTRICT = scalarltsel, JOIN = scalarltjoinsel
+);
+COMMENT ON OPERATOR <(url, url) IS 'is first url less than second?';
+
+CREATE OPERATOR > (
+	LEFTARG = url, RIGHTARG = url, PROCEDURE = url_gt,
+	COMMUTATOR = '<', NEGATOR = '<=',
+	RESTRICT = scalargtsel, JOIN = scalargtjoinsel
+);
+COMMENT ON OPERATOR >(url, url) IS 'is first url greater than second?';
+
+CREATE OPERATOR <= (
+	LEFTARG = url, RIGHTARG = url, PROCEDURE = url_lt_eq,
+	COMMUTATOR = '>=', NEGATOR = '>',
+	RESTRICT = scalarltsel, JOIN = scalarltjoinsel
+);
+COMMENT ON OPERATOR <=(url, url) IS 'is first url less than or equal to second?';
+
+CREATE OPERATOR >= (
+	LEFTARG = url, RIGHTARG = url, PROCEDURE = url_gt_eq,
+	COMMUTATOR = '<=', NEGATOR = '<',
+	RESTRICT = scalargtsel, JOIN = scalargtjoinsel
+);
+COMMENT ON OPERATOR >=(url, url) IS 'is first url greater than or equal to second?';
+
+--
+-- Finally the Btree
+--
+
+CREATE OPERATOR CLASS url_ops
+    DEFAULT FOR TYPE url USING btree AS
+        OPERATOR        1       < ,
+        OPERATOR        2       <= ,
+        OPERATOR        3       = ,
+        OPERATOR        4       >= ,
+        OPERATOR        5       > ,
+        FUNCTION        1       url_compare(url, url);

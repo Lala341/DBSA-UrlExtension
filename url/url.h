@@ -57,6 +57,12 @@ typedef struct {
 
 typedef struct varlena VAR_ARR;
 
+URL * get_input_url(VAR_ARR* input_arr){
+    URL *url = (URL *)(&(input_arr->vl_dat));
+    url = (URL *) pg_detoast_datum(input_arr);
+    return url;
+}
+
 /*
  * - Copies the fragment of url to the url destination
  * - Returns an incremented offset to next fragment
@@ -75,4 +81,13 @@ static int extract_port_from_protocol(char *protocol) {
   if (strcasecmp(protocol, "ftp") == 0) return 21;
   if (strcasecmp(protocol, "ssh") == 0) return 22;
   return 0;
+}
+
+bool primitive_compare(URL *left, URL *right) {
+    return  left->port == right->port &&
+            left->protocol == right->protocol &&
+            left->host == right->host &&
+            left->path == right->path &&
+            left->query == right->query &&
+            left->fragment == right->fragment;
 }

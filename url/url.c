@@ -452,23 +452,94 @@ Datum get_ref(PG_FUNCTION_ARGS)
 }
 
 
-PG_FUNCTION_INFO_V1(equals);
-Datum equals(PG_FUNCTION_ARGS)
+PG_FUNCTION_INFO_V1(url_equals);
+Datum url_equals(PG_FUNCTION_ARGS)
 {
-    VAR_ARR* input_arr1 = (VAR_ARR*) PG_GETARG_VARLENA_P(0);
-    URL *url1 = (URL *)(&(input_arr1->vl_dat));
-    url1 = (URL *) pg_detoast_datum(input_arr1);
+    URL *u_left = get_input_url((VAR_ARR*) PG_GETARG_VARLENA_P(0));
+    URL *u_right = get_input_url((VAR_ARR*) PG_GETARG_VARLENA_P(1));
 
-    VAR_ARR* input_arr2 = (VAR_ARR*) PG_GETARG_VARLENA_P(1);
-    URL *url2 = (URL *)(&(input_arr2->vl_dat));
-    url2 = (URL *) pg_detoast_datum(input_arr2);
-
-    char *str1 = url_to_str( url1 );
-    char *str2 = url_to_str( url2 );
-    
-    int len = strlen(str1);
-    if(len != strlen(str2))
+    // If the two structs are not equal, no need to perform intensive comparison
+    if(!primitive_compare(u_left, u_right))
         PG_RETURN_BOOL( false );
-    PG_RETURN_BOOL( compairChars(str1, str2, len) );
+
+    char *s_left = url_to_str( u_left );
+    char *s_right = url_to_str( u_right );
+    
+    PG_RETURN_BOOL( strcmp(s_left, s_right) == 0);
 }
 
+PG_FUNCTION_INFO_V1(url_not_equals);
+Datum url_not_equals(PG_FUNCTION_ARGS)
+{
+    URL *u_left = get_input_url((VAR_ARR*) PG_GETARG_VARLENA_P(0));
+    URL *u_right = get_input_url((VAR_ARR*) PG_GETARG_VARLENA_P(1));
+
+    // If the two structs are not equal, no need to perform intensive comparison
+    if(!primitive_compare(u_left, u_right))
+        PG_RETURN_BOOL( true );
+
+    char *s_left = url_to_str( u_left );
+    char *s_right = url_to_str( u_right );
+    
+    PG_RETURN_BOOL( strcmp(s_left, s_right) != 0);
+}
+
+PG_FUNCTION_INFO_V1(url_compare);
+Datum url_compare(PG_FUNCTION_ARGS)
+{
+    URL *u_left = get_input_url((VAR_ARR*) PG_GETARG_VARLENA_P(0));
+    URL *u_right = get_input_url((VAR_ARR*) PG_GETARG_VARLENA_P(1));
+
+    char *s_left = url_to_str( u_left );
+    char *s_right = url_to_str( u_right );
+    
+    PG_RETURN_INT32( strcmp(s_left, s_right) );
+}
+
+PG_FUNCTION_INFO_V1(url_less_than);
+Datum url_less_than(PG_FUNCTION_ARGS)
+{
+    URL *u_left = get_input_url((VAR_ARR*) PG_GETARG_VARLENA_P(0));
+    URL *u_right = get_input_url((VAR_ARR*) PG_GETARG_VARLENA_P(1));
+
+    char *s_left = url_to_str( u_left );
+    char *s_right = url_to_str( u_right );
+    
+    PG_RETURN_BOOL( strcmp(s_left, s_right) < 0);
+}
+
+PG_FUNCTION_INFO_V1(url_greater_than);
+Datum url_greater_than(PG_FUNCTION_ARGS)
+{
+    URL *u_left = get_input_url((VAR_ARR*) PG_GETARG_VARLENA_P(0));
+    URL *u_right = get_input_url((VAR_ARR*) PG_GETARG_VARLENA_P(1));
+
+    char *s_left = url_to_str( u_left );
+    char *s_right = url_to_str( u_right );
+    
+    PG_RETURN_BOOL( strcmp(s_left, s_right) > 0);
+}
+
+PG_FUNCTION_INFO_V1(url_less_than_equal);
+Datum url_less_than_equal(PG_FUNCTION_ARGS)
+{
+    URL *u_left = get_input_url((VAR_ARR*) PG_GETARG_VARLENA_P(0));
+    URL *u_right = get_input_url((VAR_ARR*) PG_GETARG_VARLENA_P(1));
+
+    char *s_left = url_to_str( u_left );
+    char *s_right = url_to_str( u_right );
+    
+    PG_RETURN_BOOL( strcmp(s_left, s_right) <= 0);
+}
+
+PG_FUNCTION_INFO_V1(url_greater_than_equal);
+Datum url_greater_than_equal(PG_FUNCTION_ARGS)
+{
+    URL *u_left = get_input_url((VAR_ARR*) PG_GETARG_VARLENA_P(0));
+    URL *u_right = get_input_url((VAR_ARR*) PG_GETARG_VARLENA_P(1));
+
+    char *s_left = url_to_str( u_left );
+    char *s_right = url_to_str( u_right );
+    
+    PG_RETURN_BOOL( strcmp(s_left, s_right) >= 0);
+}
