@@ -3,9 +3,6 @@
  *
  */
 #include "url.h"
-#include "executor/executor.h"
-#include "utils/builtins.h"
-#include "utils/datum.h"
 
 static URL* build_url_with_port(char *protocol, char *host, unsigned port, char *path){
 	
@@ -174,13 +171,13 @@ URL * url_constructor_spec(char* spec){
        
     }
 
-    elog(INFO,"protocol: %s", protocol);
-    elog(INFO,"userinfo: %s", userinfo);
-    elog(INFO,"host: %s", host);
-    elog(INFO,"port: %d", port);
-    elog(INFO,"path: %s", path);
-    elog(INFO,"query: %s", query);
-    elog(INFO,"fragment: %s", fragment);
+    // elog(INFO,"protocol: %s", protocol);
+    // elog(INFO,"userinfo: %s", userinfo);
+    // elog(INFO,"host: %s", host);
+    // elog(INFO,"port: %d", port);
+    // elog(INFO,"path: %s", path);
+    // elog(INFO,"query: %s", query);
+    // elog(INFO,"fragment: %s", fragment);
 
     URL *url = build_url_with_all_parts(protocol, userinfo, host, port, path, query, fragment);
     return url;
@@ -506,20 +503,22 @@ Datum get_user_info(PG_FUNCTION_ARGS)
     PG_RETURN_CSTRING( "" );
 }
 
+bool equals(URL *l, URL *r) {
+    if(!primitive_compare(l, r))
+        return false;
+
+    char *s_left = url_to_str( l );
+    char *s_right = url_to_str( r );
+    
+    return strcmp(s_left, s_right) == 0;
+}
+
 PG_FUNCTION_INFO_V1(url_equals);
 Datum url_equals(PG_FUNCTION_ARGS)
 {
     URL *u_left = get_input_url((VAR_ARR*) PG_GETARG_VARLENA_P(0));
     URL *u_right = get_input_url((VAR_ARR*) PG_GETARG_VARLENA_P(1));
-
-    // If the two structs are not equal, no need to perform intensive comparison
-    if(!primitive_compare(u_left, u_right))
-        PG_RETURN_BOOL( false );
-
-    char *s_left = url_to_str( u_left );
-    char *s_right = url_to_str( u_right );
-    
-    PG_RETURN_BOOL( strcmp(s_left, s_right) == 0);
+    PG_RETURN_BOOL( equals(u_left, u_right));
 }
 
 PG_FUNCTION_INFO_V1(url_not_equals);
@@ -527,15 +526,7 @@ Datum url_not_equals(PG_FUNCTION_ARGS)
 {
     URL *u_left = get_input_url((VAR_ARR*) PG_GETARG_VARLENA_P(0));
     URL *u_right = get_input_url((VAR_ARR*) PG_GETARG_VARLENA_P(1));
-
-    // If the two structs are not equal, no need to perform intensive comparison
-    if(!primitive_compare(u_left, u_right))
-        PG_RETURN_BOOL( true );
-
-    char *s_left = url_to_str( u_left );
-    char *s_right = url_to_str( u_right );
-    
-    PG_RETURN_BOOL( strcmp(s_left, s_right) != 0);
+    PG_RETURN_BOOL( !equals(u_left, u_right));
 }
 
 PG_FUNCTION_INFO_V1(url_compare);

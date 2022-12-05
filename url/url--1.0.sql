@@ -138,7 +138,6 @@ RETURNS boolean
 AS '$libdir/url', 'url_greater_than_equal'
 LANGUAGE C IMMUTABLE STRICT;
 
-<<<<<<< HEAD
 CREATE OR REPLACE FUNCTION url_compare(url, url)
 RETURNS integer
 AS '$libdir/url', 'url_compare'
@@ -156,7 +155,7 @@ CREATE OPERATOR = (
 COMMENT ON OPERATOR =(url, url) IS 'are the both url equal?';
 
 CREATE OPERATOR <> (
-	LEFTARG = url, RIGHTARG = url, PROCEDURE = url_lt,
+	LEFTARG = url, RIGHTARG = url, PROCEDURE = url_nq,
 	COMMUTATOR = '<>', NEGATOR = '=',
 	RESTRICT = neqsel, JOIN = neqjoinsel
 );
