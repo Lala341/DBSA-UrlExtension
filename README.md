@@ -61,27 +61,22 @@
 
 ## Methods
 
-| Return type | Method | Index supported | num |
-| ----------- | ----------- | ----------- | ------ |
-| boolean | equals(URL url1, URL url2) | Y |  3   | done
-| varchar | getAuthority() | N |    1       |   done
-| int | getDefaultPort() | N |     2      | done
-| varchar | getFile() | N |      1     | done
-| varchar | getHost() | N |      4     | done
-| varchar | getPath() | N |      1     | done
-| int | getPort() | N |     2      | done
-| varchar | getProtocol() | N |      3     | done
-| varchar | getQuery() | N |     3      | done
-| String | getRef() | N |     4      | done
-| String | getUserInfo() | N |     2      |
-| boolean | sameFile(URL url1, URL url2) | Y |     4      |
-| boolean | sameHost(URL url1, URL url2) | Y |     1      |
-| varchar | toString() | N |     2      | done
-
-Abd -1
-Isa -2
-Jez -3
-Mir -4
+| Return type | Method | Index supported | 
+| ----------- | ----------- | ----------- | 
+| boolean | equals(URL url1, URL url2) | Y |  
+| varchar | getAuthority() | N |      
+| int | getDefaultPort() | N |    
+| varchar | getFile() | N |      
+| varchar | getHost() | N |     
+| varchar | getPath() | N |    
+| int | getPort() | N |     
+| varchar | getProtocol() | N |   
+| varchar | getQuery() | N |    
+| String | getRef() | N |   
+| String | getUserInfo() | N |    
+| boolean | sameFile(URL url1, URL url2) | Y |    
+| boolean | sameHost(URL url1, URL url2) | Y |    
+| varchar | toString() | N |   
 
 ### boolean equals(URL url1, URL url2) 
 > Compares two URLs for equality.  

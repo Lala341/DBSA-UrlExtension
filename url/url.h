@@ -47,6 +47,7 @@ PG_MODULE_MAGIC;
 typedef struct {
   char vl_len_[4];
   int protocol;
+  int userinfo;
   int host;
   unsigned port;
   int path;
