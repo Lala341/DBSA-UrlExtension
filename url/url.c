@@ -210,7 +210,7 @@ static inline char* url_to_str(const URL * url)
     // The 5 extra char represents the :// after protocol and : and /
     result = palloc(size);
 
-    if(url->userinfo > 0)
+    if(url->userinfo > 1)
         result = psprintf("%s://%s@%s", protocol, userinfo, host);
     else
         result = psprintf("%s://%s", protocol, host);
