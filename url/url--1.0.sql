@@ -35,18 +35,18 @@ CREATE TYPE url (
 );
 COMMENT ON TYPE url IS 'text written in url: [0-9A-Z]+';
 
--- CREATE OR REPLACE FUNCTION url(text)
--- RETURNS url
--- AS '$libdir/url', 'text_to_url'
--- LANGUAGE C IMMUTABLE STRICT;
+CREATE OR REPLACE FUNCTION url(text)
+RETURNS url
+AS '$libdir/url', 'text_to_url'
+LANGUAGE C IMMUTABLE STRICT;
 
--- CREATE OR REPLACE FUNCTION text(url)
--- RETURNS cstring
--- AS '$libdir/url', 'url_to_text'
--- LANGUAGE C IMMUTABLE STRICT;
+CREATE OR REPLACE FUNCTION text(url)
+RETURNS text
+AS '$libdir/url', 'url_to_text'
+LANGUAGE C IMMUTABLE STRICT;
 
--- CREATE CAST (text as url) WITH FUNCTION url(text) AS IMPLICIT;
--- CREATE CAST (url as cstring) WITH FUNCTION text(url);
+CREATE CAST (text as url) WITH FUNCTION url(text) AS IMPLICIT;
+CREATE CAST (url as text) WITH FUNCTION text(url);
 
 CREATE OR REPLACE FUNCTION get_authority(url)
 RETURNS cstring

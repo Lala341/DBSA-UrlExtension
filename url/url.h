@@ -22,6 +22,9 @@ typedef struct {
   char data[1];
 } URL;
 
+// If struct url is changed this value should be reflected
+const unsigned SEGMENTS = 6;  
+
 typedef struct varlena VAR_ARR;
 
 URL * get_input_url(VAR_ARR* input_arr){
@@ -35,10 +38,10 @@ URL * get_input_url(VAR_ARR* input_arr){
  * - Returns an incremented offset to next fragment
  */
 int copyString(URL *url, int *dest, char* src, int size, int offset) {
-    int s = size + 1;
+    size_t s = size + 1;
     memset(url->data + offset, 0, s);
     *dest = s;
-    memcpy(url->data + offset, src, s);
+    memcpy(url->data + offset, src, size);
     return offset + s;
 }
 

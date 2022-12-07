@@ -3,6 +3,7 @@
  *
  */
 #include "url.h"
+#include "utils/builtins.h"  /* for text_to_cstring */
 
 static URL* build_url_with_port(char *protocol, char *host, unsigned port, char *path){
 	
@@ -12,8 +13,9 @@ static URL* build_url_with_port(char *protocol, char *host, unsigned port, char 
     sizes[1] = strlen(host);
     sizes[2] = strlen(path);
 
-    size_t size = VARHDRSZ + 5*4 + sizes[0] + sizes[1] + sizes[2] + 3;
-    URL *u = (URL *) palloc(size);
+    size_t size = VARHDRSZ + sizes[0] + sizes[1] + sizes[2] + 30;
+    URL *u = (URL *) malloc(size);
+    memset(u, 0, size);
     SET_VARSIZE(u, size);
 
     int offset = 0;
@@ -22,7 +24,7 @@ static URL* build_url_with_port(char *protocol, char *host, unsigned port, char 
     offset = copyString(u, &u->host, host, sizes[1], offset);
     offset = copyString(u, &u->path, path, sizes[2], offset);
     // Reset other fields, otherwise it would reference other memory parts thus leading to crash
-    u->userinfo=0;
+    u->userinfo = 0;
     u->query = 0;
     u->fragment = 0;
     u->port = port;
@@ -41,19 +43,29 @@ static URL* build_url_with_all_parts(char *protocol, char *userinfo, char *host,
     sizes[4] = strlen(query);
     sizes[5] = strlen(fragment);
 
-    size_t size = VARHDRSZ + sizes[0] + sizes[1] + sizes[2] + sizes[3] + sizes[4] + sizes[5] + 5*6;
+    elog(INFO, "P: %s (%d), U: %s (%d), H: %s (%d), P: %s (%d), Q: %s (%d), F: %s (%d)", protocol, sizes[0], userinfo, sizes[1], host, sizes[2],  path, sizes[3], query, sizes[4], fragment, sizes[5]);
+
+    size_t size = VARHDRSZ + sizes[0] + sizes[1] + sizes[2] + sizes[3] + sizes[4] + sizes[5] + (SEGMENTS * 5) + SEGMENTS;
     URL *u = (URL *) palloc(size);
     SET_VARSIZE(u, size);
 
     int offset = 0;
 
+    // int off[6] = {0,0,0,0,0,0};
     offset = copyString(u, &u->protocol, protocol, sizes[0], offset);
+    off[0] = offset;
     offset = copyString(u, &u->userinfo, userinfo, sizes[1], offset);
+    off[1] = offset;
     offset = copyString(u, &u->host, host, sizes[2], offset);
+    off[2] = offset;
     offset = copyString(u, &u->path, path, sizes[3], offset);
+    off[3] = offset;
     offset = copyString(u, &u->query, query, sizes[4], offset);
+    off[4] = offset;
     offset = copyString(u, &u->fragment, fragment, sizes[5], offset);
-    
+    off[5] = offset;
+    // elog(INFO, "P: 0, U: %d, H: %d, P: %d, Q: %d, F: %d, after: %d", off[0], off[1], off[2], off[3], off[4], off[5]);
+
     u->port = port;
     // elog(INFO,"P:%d H:%d, Path:%d, Q:%d, F:%d OFF:%d", u->protocol, u->host, u->path, u->query, u->fragment, offset);
     return u;
@@ -193,38 +205,39 @@ static inline char* url_to_str(const URL * url)
     char *userinfo = protocol + url->protocol;
     char *host = userinfo + url->userinfo;
     char *path = host + url->host;
-    unsigned port_len = num_digits(url->port);
     char *query = path + url->path;
     char *fragment = query + url->query;
+    unsigned port_len = num_digits(url->port);
 
     char *result;
 
     // Since all url segment contains size + 1, that's why we are not adding an extra + 1 in size
     // for example path contains an extra size for '\0'
-    if(url->userinfo > 0)   size += url->userinfo;
-    if(url->port > 0)       size += port_len;
-    if(url->path > 0)       size += url->path;
-    if(url->query > 0)      size += url->query;
-    if(url->fragment > 0)   size += url->fragment;
+    if(url->userinfo > 1)   size += url->userinfo;
+    if(url->port > 1)       size += port_len;
+    if(url->path > 1)       size += url->path;
+    if(url->query > 1)      size += url->query;
+    if(url->fragment > 1)   size += url->fragment;
 
     // The 5 extra char represents the :// after protocol and : and /
-    result = palloc(size);
+    result = malloc(size);
+    memset(result, 0, size);
 
     if(url->userinfo > 1)
         result = psprintf("%s://%s@%s", protocol, userinfo, host);
     else
         result = psprintf("%s://%s", protocol, host);
 
-    if(url->port > 0)
+    if(url->port > 1)
         result = psprintf("%s:%d", result, url->port);
 
-    if(url->path > 0)
+    if(url->path > 1)
         result = psprintf("%s/%s", result, path);
 
-    if(url->query > 0)
+    if(url->query > 1)
         result = psprintf("%s?%s", result, query);
 
-    if(url->fragment > 0)
+    if(url->fragment > 1)
         result = psprintf("%s#%s", result, fragment);
 
     return result;
@@ -232,15 +245,16 @@ static inline char* url_to_str(const URL * url)
 
 static inline char* getFile(const URL * url)
 {
-    size_t size = 0;
+    int size = 0;
 
-    if(url->path > 1)       size += url->path;
-    if(url->query > 1)      size += url->query;
+    if(url->path > 1)       size += url->path-1;
+    if(url->query > 1)      size += url->query-1;
 
     char *result;
     char *path;
     
-    result = palloc(size);
+    result = malloc(size + 1);
+    memset(result, 0, size + 1);
     
     if(url->path > 1){
         path = url->data + url->protocol + url->userinfo + url->host;
@@ -312,38 +326,39 @@ Datum get_protocol(PG_FUNCTION_ARGS)
 }
 
 
-// /**
-//  * Used for Casting Text -> URL
-//  */
-// PG_FUNCTION_INFO_V1(text_to_url);
-// Datum text_to_url(PG_FUNCTION_ARGS)
-// {
-//     text *txt = PG_GETARG_TEXT_P(0);
-//     char *str = DatumGetCString( DirectFunctionCall1(textout, PointerGetDatum(txt) ) );
-//     URL * r = url_constructor_spec( str );
-//     pfree(str);
-//     pfree(txt);
-//     pfree(r);
-//     PG_RETURN_POINTER( r );
-// }
+/**
+ * Used for Casting Text -> URL
+ */
+PG_FUNCTION_INFO_V1(text_to_url);
+Datum text_to_url(PG_FUNCTION_ARGS)
+{
+    text *txt = PG_GETARG_TEXT_P(0);
+    // char *str = DatumGetCString( DirectFunctionCall1(textout, PointerGetDatum(txt) ) );
+    char *str = text_to_cstring(txt);
+    URL * r = url_constructor_spec( str );
+    // pfree(str);
+    // pfree(txt);
+    // pfree(r);
+    PG_RETURN_POINTER( r );
+}
 
-// /**
-//  * Used for Casting URL -> Text
-//  */
-// PG_FUNCTION_INFO_V1(url_to_text);
-// Datum url_to_text(PG_FUNCTION_ARGS)
-// {
-//     // URL *s = (URL *) ; 
+/**
+ * Used for Casting URL -> Text
+ */
+PG_FUNCTION_INFO_V1(url_to_text);
+Datum url_to_text(PG_FUNCTION_ARGS)
+{
+    URL *url = get_input_url((VAR_ARR*) PG_GETARG_VARLENA_P(0));
     
-//     URL *url = (URL *) PG_GETARG_POINTER(0);   
-//     pfree(url);
-//     // char * ss = url_to_str(s);
-//     // text *out = (text *) DirectFunctionCall1(textin, PointerGetDatum(url) );
-//     // pfree(url);
-//     // pfree(ss);
-//     // pfree(out);
-//     PG_RETURN_CSTRING(url->protocol);
-// }
+    // URL *url = (URL *) PG_GETARG_POINTER(0);
+    // char * url_str = url_to_str(url);
+    text *out = (text *) DirectFunctionCall1(textin, PointerGetDatum(url) );
+    // pfree(url);
+    // pfree(ss);
+    // pfree(out);
+    // PG_RETURN_CSTRING(url->protocol);
+    PG_RETURN_TEXT_P(out);
+}
 
 PG_FUNCTION_INFO_V1(get_authority);
 Datum get_authority(PG_FUNCTION_ARGS)

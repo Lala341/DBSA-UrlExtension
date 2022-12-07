@@ -78,7 +78,7 @@ char * extractStr(regmatch_t pmatch, const char *str) {
     // strncpy(dest, str + pmatch.rm_so, pmatch.rm_eo - pmatch.rm_so);
 
     char *ptr_start = str + pmatch.rm_so;
-    char *dest = malloc(len + 1);
+    char *dest = palloc0(len + 1);
     memset(dest, 0, len + 1);
     memcpy(dest, ptr_start, len);
     
@@ -132,14 +132,14 @@ bool check_regex_part(bool showerror, char* str, char* data){
 
         if(showerror==true){
              ereport(
-            ERROR,
-            (
-                errcode(ERRCODE_INVALID_TEXT_REPRESENTATION),
-                errmsg("Invalid URL pattern provided (Error Code: %d): \"%s\"", rc_p, spec)
-            )
-        );
+                ERROR,
+                (
+                    errcode(ERRCODE_INVALID_TEXT_REPRESENTATION),
+                    errmsg("Invalid URL pattern provided (Error Code: %d): \"%s\"", rc_p, spec)
+                )
+            );
         }
-    regfree(&rx_p);
+        regfree(&rx_p);
        return false;
     }
     regfree(&rx_p);
