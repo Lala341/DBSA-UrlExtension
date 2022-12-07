@@ -93,6 +93,11 @@ RETURNS cstring
 AS '$libdir/url', 'get_ref'
 LANGUAGE C IMMUTABLE STRICT;
 
+CREATE OR REPLACE FUNCTION equals(url, url)
+RETURNS boolean
+AS '$libdir/url', 'equals'
+LANGUAGE C IMMUTABLE STRICT;
+
 CREATE OR REPLACE FUNCTION same_file(url, url)
 RETURNS boolean
 AS '$libdir/url', 'same_file'
