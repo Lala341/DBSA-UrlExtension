@@ -141,10 +141,10 @@ URL * url_constructor_spec(char* spec){
     char *protocol = "";
     char *userinfo = "";
     char *host = "";
-    unsigned port  = 0;
     char *path = "";
     char *query = "";
     char *fragment = "";
+    unsigned port_final =0;
 
       
 if(strchr(spec, ' ') != NULL)
@@ -156,113 +156,495 @@ if(strchr(spec, ' ') != NULL)
                 errmsg("Invalid URL pattern provided (Not whitespaces allowed).")
             ));
   }
-    
-    bool general = check_regex_part(true,spec, "^((.*):\\/\\/([^\\/\\?\\#]+@)?([^\\/\\?\\#]+)(:[0-9]{1,5})?(\\/[^\\/\\?\\#]+)*(\\/)?(\\?[^\\/\\?\\#]+)?(\\#[^\\/\\?\\#]+)?)$");
 
-    bool userinfo_c = check_regex_part(false,spec, "^((.*):\\/\\/([^\\/\\?\\#]+@)([^\\/\\?\\#]+)(:[0-9]{1,5})?(\\/[^\\/\\?\\#]+)*(\\/)?(\\?[^\\/\\?\\#]+)?(\\#[^\\/\\?\\#]+)?)$");
-    bool port_c = check_regex_part(false,spec, "^((.*):\\/\\/([^\\/\\?\\#]+@)?([^\\/\\?\\#]+)(:[0-9]{1,5})(\\/[^\\/\\?\\#]+)*(\\/)?(\\?[^\\/\\?\\#]+)?(\\#[^\\/\\?\\#]+)?)$");
-    bool has_path_division_c = check_regex_part(false,spec, "^((.*):\\/\\/([^\\/\\?\\#]+@)?([^\\/\\?\\#]+)(:[0-9]{1,5})?\\/((\\/)?[^\\/\\?\\#]+)*(\\/)?(\\?[^\\/\\?\\#]+)?(\\#[^\\/\\?\\#]+)?)$");
-    bool path_c = check_regex_part(false,spec, "^((.*):\\/\\/([^\\/\\?\\#]+@)?([^\\/\\?\\#]+)(:[0-9]{1,5})?(\\/[^\\/\\?\\#]+)+(\\/)?(\\?[^\\/\\?\\#]+)?(\\#[^\\/\\?\\#]+)?)$");
-    bool query_c = check_regex_part(false,spec, "^((.*):\\/\\/([^\\/\\?\\#]+@)?([^\\/\\?\\#]+)(:[0-9]{1,5})?(\\/[^\\/\\?\\#]+)*(\\/)?(\\?[^\\/\\?\\#]+)(\\#[^\\/\\?\\#]+)?)$");
-    bool fragment_c = check_regex_part(false,spec, "^((.*):\\/\\/([^\\/\\?\\#]+@)?([^\\/\\?\\#]+)(:[0-9]{1,5})?(\\/[^\\/\\?\\#]+)*(\\/)?(\\?[^\\/\\?\\#]+)?(\\#[^\\/\\?\\#]+))$");
+    bool file_c = check_regex_part(false,spec, "^file");
+    char *p= stripString(spec);
+    
+    if(file_c==true){
+    bool general_file = check_regex_part(true,spec, "^((file:[\\/]+)?([^\\/\\?\\#\\:]+)?(\\/[^\\/\\?\\#]*)*(\\/)?)$");
+    
+    protocol="file";
+
+    bool host_file = check_regex_part(false,spec, "^(file:\\/\\/([^\\/\\?\\#\\:]+)(\\/[^\\/\\?\\#]*)*(\\/)?)$");
+    bool path_file = check_regex_part(false,spec, "^((file:[\\/]+)([^\\/\\?\\#\\:]+)?(\\/[^\\/\\?\\#]*)+(\\/)?)$");
+
+char *rest_file;
+char *rest_too;
+char *temp_clean_data;
+
+if(host_file==true){
+
+
+p = strtokm(p, "://");
+if(p){
+p=strtokm(NULL, "://"); 
+}
+if(p){
+
+temp_clean_data=psprintf("%s", p);
+temp_clean_data=strtok(temp_clean_data, ":/?#");
+host=psprintf("%s", temp_clean_data);
+
+p=strtokm(p, "/"); 
+p=strtokm(NULL, "/"); 
+}
+if(p){
+char *path_add=psprintf("%s",p);
+rest_too=strtokm(NULL, "/"); 
+while (rest_too != NULL)
+{
+    path_add=psprintf("%s/%s",path_add,rest_too);
+    rest_too = strtokm(NULL, "/");
+}
+path=psprintf("%s", path_add);    
+}
+
+}else{
+
+host="localhost";
+p = strtokm(p, "file:///");
+p = strtokm(NULL, "file:///");
+
+if(p){
+char *path_add=psprintf("%s",p);
+rest_too=strtokm(NULL, "/"); 
+while (rest_too != NULL)
+{
+    path_add=psprintf("%s/%s",path_add,rest_too);
+    rest_too = strtokm(NULL, "/");
+}
+path=psprintf("%s", path_add);   
+}
+
+}
+
+
+
+
+    }else{
+    bool general = check_regex_part(true,spec, "^(([a-zA-Z]+:[\\/]+)?([^\\/\\?\\#\\:]+@)?([^\\/\\?\\#\\:]+)?(:[0-9]{1,5})?(\\/[^\\/\\?\\#\\:]*)*(\\/)?(\\?[^\\/\\?\\#\\:]+)?(\\#[^\\/\\?\\#\\:]+)?)$");
+
+    bool protocol_c = check_regex_part(false,spec, "^(([a-zA-Z]+:[\\/]+)([^\\/\\?\\#\\:]+@)?([^\\/\\?\\#\\:]+)?(:[0-9]{1,5})?(\\/[^\\/\\?\\#\\:]*)*(\\/)?(\\?[^\\/\\?\\#\\:]+)?(\\#[^\\/\\?\\#\\:]+)?)$");
+    bool host_c = check_regex_part(false,spec, "^(([a-zA-Z]+:[\\/]+)?([^\\/\\?\\#\\:]+@)?([^\\/\\?\\#\\:]+)(:[0-9]{1,5})?(\\/[^\\/\\?\\#\\:]*)*(\\/)?(\\?[^\\/\\?\\#\\:]+)?(\\#[^\\/\\?\\#\\:]+)?)$");
+    bool userinfo_c = check_regex_part(false,spec, "^(([a-zA-Z]+:[\\/]+)?([^\\/\\?\\#\\:]+@)([^\\/\\?\\#\\:]+)?(:[0-9]{1,5})?(\\/[^\\/\\?\\#\\:]*)*(\\/)?(\\?[^\\/\\?\\#\\:]+)?(\\#[^\\/\\?\\#\\:]+)?)$");
+    bool port_c = check_regex_part(false,spec, "^(([a-zA-Z]+:[\\/]+)?([^\\/\\?\\#\\:]+@)?([^\\/\\?\\#\\:]+)?(:[0-9]{1,5})(\\/[^\\/\\?\\#\\:]*)*(\\/)?(\\?[^\\/\\?\\#\\:]+)?(\\#[^\\/\\?\\#\\:]+)?)$");
+    bool path_c = check_regex_part(false,spec, "^(([a-zA-Z]+:[\\/]+)?([^\\/\\?\\#\\:]+@)?([^\\/\\?\\#\\:]+)?(:[0-9]{1,5})?(\\/[^\\/\\?\\#\\:]*)+(\\/)?(\\?[^\\/\\?\\#\\:]+)?(\\#[^\\/\\?\\#\\:]+)?)$");
+    bool query_c = check_regex_part(false,spec, "^(([a-zA-Z]+:[\\/]+)?([^\\/\\?\\#\\:]+@)?([^\\/\\?\\#\\:]+)?(:[0-9]{1,5})?(\\/[^\\/\\?\\#\\:]*)*(\\/)?(\\?[^\\/\\?\\#\\:]+)(\\#[^\\/\\?\\#\\:]+)?)$");
+    bool fragment_c = check_regex_part(false,spec, "^(([a-zA-Z]+:[\\/]+)?([^\\/\\?\\#\\:]+@)?([^\\/\\?\\#\\:]+)?(:[0-9]{1,5})?(\\/[^\\/\\?\\#\\:]*)*(\\/)?(\\?[^\\/\\?\\#\\:]+)?(\\#[^\\/\\?\\#\\:]+))$");
    
 
-    // Protocol
-    char *p;
-    p = strtokm(spec, "://");
-    if(p) protocol = p;
+    char *port = "";
     
-    p = strtokm(NULL, "://");
+
+    // Protocol
+    char *last_split_character;
+    char *prev_split_character;
+    char *rest;
+    bool first_part=false;
+    char *first_part_s="";
+    char *first_split_character;
+    char *temp_clean_data;
+    char *rest_too="";
+
+    
+    p = strtokm(p, "://");
+    last_split_character="://";
+    prev_split_character="";
+
+
+
     if(p){
-        bool previoussplit = false;
+        
+        rest=strtokm(NULL, "://"); 
+        if(!rest){
+            last_split_character=prev_split_character;
 
-        const char *tempport = stripString(p);
-        if(userinfo_c == true){
-            char *charactersplit = "@";
-
-            p = strtok(p, charactersplit);
-            if(p){
-                userinfo = p;
-                tempport = stripString(p);
-                p = strtok(NULL, "");
+        }else{
+             if(first_part==false){
+                first_part=true;
+                first_part_s=psprintf("%s", p);
+                first_split_character=last_split_character;
             }
+            p=psprintf("%s", rest);
+            prev_split_character=last_split_character;
+
+        }
+        if(strcmp(last_split_character,"://")==0){
+            temp_clean_data=psprintf("%s", p);
+            temp_clean_data=strtok(temp_clean_data, "@:/?#");
+            if(userinfo_c==true){
+                userinfo=psprintf("%s", temp_clean_data);
+            }else{
+                 host=psprintf("%s", temp_clean_data);
+
+            }
+        }else if(strcmp(last_split_character,"@")==0){
+            temp_clean_data=psprintf("%s", p);
+            temp_clean_data=strtok(temp_clean_data, ":/?#");
+            host=psprintf("%s", temp_clean_data);
+        }else if(strcmp(last_split_character,":")==0){
+            temp_clean_data=psprintf("%s", p);
+            temp_clean_data=strtok(temp_clean_data, "/?#");
+            port=psprintf("%s", temp_clean_data);
+        }else if(strcmp(last_split_character,"/")==0){
+            temp_clean_data=psprintf("%s", p);
+            temp_clean_data=strtok(temp_clean_data, "?#");
+            path=psprintf("%s", temp_clean_data);
+        }else if(strcmp(last_split_character,"?")==0){
+            temp_clean_data=psprintf("%s", p);
+            temp_clean_data=strtok(temp_clean_data, "#");
+            query=psprintf("%s", temp_clean_data);
+        }else if(strcmp(last_split_character,"#")==0){
+            fragment=psprintf("%s", p);
         }
         
-        char *charactersplit = "/";
 
-        if(has_path_division_c == false){
-            charactersplit = "?";
-            if(query_c == false){
-                charactersplit = "#";
+    }
+    if(p){
+        p = strtokm(p, "@");
+        last_split_character="@";
+    }
+    if(p){
+        
+        rest=strtokm(NULL, "@"); 
+        if(!rest){
+            last_split_character=prev_split_character;
+
+        }else{
+             if(first_part==false){
+                first_part=true;
+                first_part_s=psprintf("%s", p);
+                first_split_character=last_split_character;
             }
-            previoussplit = true;
-        }
-        p = strtok(p, charactersplit);
-        if(p){
-
-            if(p && port_c == false)
-                host = p;
-
-            tempport = stripString(p);
-            p = strtok(NULL, "");
+            p=psprintf("%s", rest);
+            prev_split_character=last_split_character;
 
         }
+        if(strcmp(last_split_character,"://")==0){
+            temp_clean_data=psprintf("%s", p);
+            temp_clean_data=strtok(temp_clean_data, "@:/?#");
+            if(userinfo_c==true){
+                userinfo=psprintf("%s", temp_clean_data);
+            }else{
+                 host=psprintf("%s", temp_clean_data);
+
+            }
+        }else if(strcmp(last_split_character,"@")==0){
+            temp_clean_data=psprintf("%s", p);
+            temp_clean_data=strtok(temp_clean_data, ":/?#");
+            host=psprintf("%s", temp_clean_data);
+        }else if(strcmp(last_split_character,":")==0){
+            temp_clean_data=psprintf("%s", p);
+            temp_clean_data=strtok(temp_clean_data, "/?#");
+            port=psprintf("%s", temp_clean_data);
+        }else if(strcmp(last_split_character,"/")==0){
+            temp_clean_data=psprintf("%s", p);
+            temp_clean_data=strtok(temp_clean_data, "?#");
+            path=psprintf("%s", temp_clean_data);
+        }else if(strcmp(last_split_character,"?")==0){
+            temp_clean_data=psprintf("%s", p);
+            temp_clean_data=strtok(temp_clean_data, "#");
+            query=psprintf("%s", temp_clean_data);
+        }else if(strcmp(last_split_character,"#")==0){
+            fragment=psprintf("%s", p);
+        }
+        
+
+    }
+    if(p){
+         p = strtokm(p, ":");
+         last_split_character=":";
+    }
+    if(p){
+        
+        rest=strtokm(NULL, ":"); 
+        if(!rest){
+            last_split_character=prev_split_character;
+
+        }else{
+             if(first_part==false){
+                first_part=true;
+                first_part_s=psprintf("%s", p);
+                first_split_character=last_split_character;
+            }
+            p=psprintf("%s", rest);
+            prev_split_character=last_split_character;
+
+        }
+        if(strcmp(last_split_character,"://")==0){
+            temp_clean_data=psprintf("%s", p);
+            temp_clean_data=strtok(temp_clean_data, "@:/?#");
+            if(userinfo_c==true){
+                userinfo=psprintf("%s", temp_clean_data);
+            }else{
+                 host=psprintf("%s", temp_clean_data);
+
+            }
+        }else if(strcmp(last_split_character,"@")==0){
+            temp_clean_data=psprintf("%s", p);
+            temp_clean_data=strtok(temp_clean_data, ":/?#");
+            host=psprintf("%s", temp_clean_data);
+        }else if(strcmp(last_split_character,":")==0){
+            temp_clean_data=psprintf("%s", p);
+            temp_clean_data=strtok(temp_clean_data, "/?#");
+            port=psprintf("%s", temp_clean_data);
+        }else if(strcmp(last_split_character,"/")==0){
+            temp_clean_data=psprintf("%s", p);
+            temp_clean_data=strtok(temp_clean_data, "?#");
+            path=psprintf("%s", temp_clean_data);
+        }else if(strcmp(last_split_character,"?")==0){
+            temp_clean_data=psprintf("%s", p);
+            temp_clean_data=strtok(temp_clean_data, "#");
+            query=psprintf("%s", temp_clean_data);
+        }else if(strcmp(last_split_character,"#")==0){
+            fragment=psprintf("%s", p);
+        }
+
+    }
+    if(p){
+         p = strtokm(p, "/");
+         last_split_character="/";
+    }
+    if(p){
+        
+        rest=strtokm(NULL, "/"); 
+        
+        if(!rest){
+            last_split_character=prev_split_character;
+
+        }else{
             
-        const char *data = p;
-        if(p){
-            stripString(p);
-            data = stripString(p);
-        }  
-        if(p && port_c == true){
-            tempport = strtok(tempport, ":");  
-            host = tempport;
-            tempport = strtok(NULL, "");  
-            port = atoi(tempport);
-        }
-        
-        if(p && previoussplit == true){
-            psprintf(p, "%s%s", charactersplit, data);
-        }
-       
-        if(p){
-            char *tempquery = p;
-            char *charactersplit="?";
-            if(query_c == false){
-                charactersplit = "#";
+            if(first_part==false){
+                first_part=true;
+                first_part_s=psprintf("%s", p);
+                first_split_character=last_split_character;
             }
-            p = stripString(strtok(tempquery, charactersplit));
-        }
-            if(p && path_c == true){
-                path = p; 
-                p = strtok(NULL, "");
-            }
-               
-            if(p && query_c == true){
-                if(fragment_c == false) query = p;
-            }
+            char *path_add=psprintf("%s",rest);
+            rest_too=strtokm(NULL, "/"); 
+            while (rest_too != NULL)
+            {
+                path_add=psprintf("%s/%s",path_add,rest_too);
+                rest_too = strtokm(NULL, "/");
 
-            if(p && fragment_c == true){
-                char *tempquery = stripString(p);
-                p = strtok(tempquery, "#");
-
-                if(query_c == true){
-                    query = p;
-                    p = strtok(NULL, "");
-                }
-                fragment = p;
             }
-       
+            p=psprintf("%s",path_add);
+            prev_split_character=last_split_character;
+
+        }
+        if(strcmp(last_split_character,"://")==0){
+            temp_clean_data=psprintf("%s", p);
+            temp_clean_data=strtok(temp_clean_data, "@:/?#");
+            if(userinfo_c==true){
+                userinfo=psprintf("%s", temp_clean_data);
+            }else{
+                 host=psprintf("%s", temp_clean_data);
+
+            }
+        }else if(strcmp(last_split_character,"@")==0){
+            temp_clean_data=psprintf("%s", p);
+            temp_clean_data=strtok(temp_clean_data, ":/?#");
+            host=psprintf("%s", temp_clean_data);
+        }else if(strcmp(last_split_character,":")==0){
+            temp_clean_data=psprintf("%s", p);
+            temp_clean_data=strtok(temp_clean_data, "/?#");
+            port=psprintf("%s", temp_clean_data);
+        }else if(strcmp(last_split_character,"/")==0){
+            temp_clean_data=psprintf("%s", p);
+            temp_clean_data=strtok(temp_clean_data, "?#");
+            path=psprintf("%s", temp_clean_data);
+        }else if(strcmp(last_split_character,"?")==0){
+            temp_clean_data=psprintf("%s", p);
+            temp_clean_data=strtok(temp_clean_data, "#");
+            query=psprintf("%s", temp_clean_data);
+        }else if(strcmp(last_split_character,"#")==0){
+            fragment=psprintf("%s", p);
+        }
+
+    }
+    if(p){
+         p = strtokm(p, "?");
+         last_split_character="?";
+    }
+    if(p){
+         
+        rest=strtokm(NULL, "?"); 
+         if(!rest){
+            last_split_character=prev_split_character;
+
+        }else{
+             if(first_part==false){
+                first_part=true;
+                first_part_s=psprintf("%s", p);
+                first_split_character=last_split_character;
+            }
+            p=psprintf("%s", rest);
+            prev_split_character=last_split_character;
+
+        }
+        if(strcmp(last_split_character,"://")==0){
+            temp_clean_data=psprintf("%s", p);
+            temp_clean_data=strtok(temp_clean_data, "@:/?#");
+            if(userinfo_c==true){
+                userinfo=psprintf("%s", temp_clean_data);
+            }else{
+                 host=psprintf("%s", temp_clean_data);
+
+            }
+        }else if(strcmp(last_split_character,"@")==0){
+            temp_clean_data=psprintf("%s", p);
+            temp_clean_data=strtok(temp_clean_data, ":/?#");
+            host=psprintf("%s", temp_clean_data);
+        }else if(strcmp(last_split_character,":")==0){
+            temp_clean_data=psprintf("%s", p);
+            temp_clean_data=strtok(temp_clean_data, "/?#");
+            port=psprintf("%s", temp_clean_data);
+        }else if(strcmp(last_split_character,"/")==0){
+            temp_clean_data=psprintf("%s", p);
+            temp_clean_data=strtok(temp_clean_data, "?#");
+            path=psprintf("%s", temp_clean_data);
+        }else if(strcmp(last_split_character,"?")==0){
+            temp_clean_data=psprintf("%s", p);
+            temp_clean_data=strtok(temp_clean_data, "#");
+            query=psprintf("%s", temp_clean_data);
+        }else if(strcmp(last_split_character,"#")==0){
+            fragment=psprintf("%s", p);
+        }
+
+    }
+    if(p){
+         p = strtokm(p, "#");
+         last_split_character="#";
+    }
+    if(p){
+         
+        rest=strtokm(NULL, "#"); 
+        if(!rest){
+            last_split_character=prev_split_character;
+
+        }else{
+             if(first_part==false){
+                first_part=true;
+                first_part_s=psprintf("%s", p);
+                first_split_character=last_split_character;
+            }
+            p=psprintf("%s", rest);
+            prev_split_character=last_split_character;
+
+        }
+        if(strcmp(last_split_character,"://")==0){
+            temp_clean_data=psprintf("%s", p);
+            temp_clean_data=strtok(temp_clean_data, "@:/?#");
+            if(userinfo_c==true){
+                userinfo=psprintf("%s", temp_clean_data);
+            }else{
+                 host=psprintf("%s", temp_clean_data);
+
+            }
+        }else if(strcmp(last_split_character,"@")==0){
+            temp_clean_data=psprintf("%s", p);
+            temp_clean_data=strtok(temp_clean_data, ":/?#");
+            host=psprintf("%s", temp_clean_data);
+        }else if(strcmp(last_split_character,":")==0){
+            temp_clean_data=psprintf("%s", p);
+            temp_clean_data=strtok(temp_clean_data, "/?#");
+            port=psprintf("%s", temp_clean_data);
+        }else if(strcmp(last_split_character,"/")==0){
+            temp_clean_data=psprintf("%s", p);
+            temp_clean_data=strtok(temp_clean_data, "?#");
+            path=psprintf("%s", temp_clean_data);
+        }else if(strcmp(last_split_character,"?")==0){
+            temp_clean_data=psprintf("%s", p);
+            temp_clean_data=strtok(temp_clean_data, "#");
+            query=psprintf("%s", temp_clean_data);
+        }else if(strcmp(last_split_character,"#")==0){
+            fragment=psprintf("%s", p);
+        }else if(strcmp(last_split_character,"")==0){
+            host=psprintf("%s", p);
+        }
+
+    }
+    if(p){
+
+        if(strcmp(last_split_character,"://")==0){
+            if(userinfo_c==true){
+                userinfo=psprintf("%s", temp_clean_data);
+            }else{
+                 host=psprintf("%s", temp_clean_data);
+
+            }
+        }
+        if(strcmp(last_split_character,"@")==0){
+            host=psprintf("%s", p);
+        }else if(strcmp(last_split_character,":")==0){
+            port=psprintf("%s", p);
+        }else if(strcmp(last_split_character,"/")==0){
+            path=psprintf("%s", p);
+        }else if(strcmp(last_split_character,"?")==0){
+            query=psprintf("%s", p);
+        }else if(strcmp(last_split_character,"#")==0){
+            fragment=psprintf("%s", p);
+        }
+    }
+    //Recognize first part
+    
+    if(strcmp(first_part_s,"")!=0){
+    
+    bool path_c = check_regex_part(false,first_part_s, "^\\/");
+    bool query_c = check_regex_part(false,first_part_s, "^\\?");
+    bool fragment_c = check_regex_part(false,first_part_s, "^\\#");
+    
+
+        if(strcmp(first_split_character,"://")==0){
+            protocol=psprintf("%s",first_part_s );
+        }else if(strcmp(first_split_character,"@")==0){
+            userinfo=psprintf("%s",first_part_s );
+        }else if(strcmp(first_split_character,":")==0){
+            host=psprintf("%s", first_part_s);
+        }else if(strcmp(first_split_character,"/")==0){
+            if(path_c==true){
+                path=psprintf("%s", first_part_s);
+            }else{
+                host=psprintf("%s", first_part_s);
+            }
+            
+        }else if(strcmp(first_split_character,"?")==0){
+             if(path_c==true){
+                path=psprintf("%s", first_part_s);
+            }else if(query_c==true){
+                query=psprintf("%s", first_part_s);
+            } else{
+                host=psprintf("%s", first_part_s);
+            }
+        }else if(strcmp(first_split_character,"#")==0){
+            if(path_c==true){
+                path=psprintf("%s", first_part_s);
+            }else if(query_c==true){
+                query=psprintf("%s", first_part_s);
+            }else if(fragment_c==true){
+                fragment=psprintf("%s", first_part_s);
+            } else{
+                host=psprintf("%s", first_part_s);
+            }
+        }
+
+    }
+    if(strcmp(port,"")!=0){
+        port_final=atoi(port);
     }
 
-    // elog(INFO,"protocol: %s", protocol);
-    // elog(INFO,"userinfo: %s", userinfo);
-    // elog(INFO,"host: %s", host);
-    // elog(INFO,"port: %d", port);
-    // elog(INFO,"path: %s", path);
-    // elog(INFO,"query: %s", query);
-    // elog(INFO,"fragment: %s", fragment);
 
-    URL *url = build_url_with_all_parts(protocol, userinfo, host, port, path, query, fragment);
+    elog(INFO,"protocol: %s", protocol);
+    elog(INFO,"userinfo: %s", userinfo);
+    elog(INFO,"host: %s", host);
+    elog(INFO,"port: %s", port);
+    elog(INFO,"path: %s", path);
+    elog(INFO,"query: %s", query);
+    elog(INFO,"fragment: %s", fragment);
+
+   
+    }
+     URL *url = build_url_with_all_parts(protocol, userinfo, host, port_final, path, query, fragment);
+
     return url;
 }   
 
@@ -298,9 +680,9 @@ URL * url_constructor_spec_for_context(char* spec, URL * url){
     char *first_part_s="";
     char *first_split_character;
     char *temp_clean_data;
+    char *rest_too="";
 
-
-
+    
     p = strtokm(p, "@");
     last_split_character="@";
     prev_split_character="";
@@ -324,19 +706,19 @@ URL * url_constructor_spec_for_context(char* spec, URL * url){
         }
         if(strcmp(last_split_character,"@")==0){
             temp_clean_data=psprintf("%s", p);
-temp_clean_data=strtok(temp_clean_data, ":/?#");
+            temp_clean_data=strtok(temp_clean_data, ":/?#");
             host=psprintf("%s", temp_clean_data);
         }else if(strcmp(last_split_character,":")==0){
             temp_clean_data=psprintf("%s", p);
-temp_clean_data=strtok(temp_clean_data, "/?#");
+            temp_clean_data=strtok(temp_clean_data, "/?#");
             port=psprintf("%s", temp_clean_data);
         }else if(strcmp(last_split_character,"/")==0){
             temp_clean_data=psprintf("%s", p);
-temp_clean_data=strtok(temp_clean_data, "?#");
+            temp_clean_data=strtok(temp_clean_data, "?#");
             path=psprintf("%s", temp_clean_data);
         }else if(strcmp(last_split_character,"?")==0){
             temp_clean_data=psprintf("%s", p);
-temp_clean_data=strtok(temp_clean_data, "#");
+            temp_clean_data=strtok(temp_clean_data, "#");
             query=psprintf("%s", temp_clean_data);
         }else if(strcmp(last_split_character,"#")==0){
             fragment=psprintf("%s", p);
@@ -366,19 +748,19 @@ temp_clean_data=strtok(temp_clean_data, "#");
         }
         if(strcmp(last_split_character,"@")==0){
             temp_clean_data=psprintf("%s", p);
-temp_clean_data=strtok(temp_clean_data, ":/?#");
+            temp_clean_data=strtok(temp_clean_data, ":/?#");
             host=psprintf("%s", temp_clean_data);
         }else if(strcmp(last_split_character,":")==0){
             temp_clean_data=psprintf("%s", p);
-temp_clean_data=strtok(temp_clean_data, "/?#");
+            temp_clean_data=strtok(temp_clean_data, "/?#");
             port=psprintf("%s", temp_clean_data);
         }else if(strcmp(last_split_character,"/")==0){
             temp_clean_data=psprintf("%s", p);
-temp_clean_data=strtok(temp_clean_data, "?#");
+            temp_clean_data=strtok(temp_clean_data, "?#");
             path=psprintf("%s", temp_clean_data);
         }else if(strcmp(last_split_character,"?")==0){
             temp_clean_data=psprintf("%s", p);
-temp_clean_data=strtok(temp_clean_data, "#");
+            temp_clean_data=strtok(temp_clean_data, "#");
             query=psprintf("%s", temp_clean_data);
         }else if(strcmp(last_split_character,"#")==0){
             fragment=psprintf("%s", p);
@@ -392,34 +774,44 @@ temp_clean_data=strtok(temp_clean_data, "#");
     if(p){
         
         rest=strtokm(NULL, "/"); 
+        
         if(!rest){
             last_split_character=prev_split_character;
 
         }else{
-             if(first_part==false){
+            
+            if(first_part==false){
                 first_part=true;
                 first_part_s=psprintf("%s", p);
                 first_split_character=last_split_character;
             }
-            p=psprintf("%s", rest);
+            char *path_add=psprintf("%s",rest);
+            rest_too=strtokm(NULL, "/"); 
+            while (rest_too != NULL)
+            {
+                path_add=psprintf("%s/%s",path_add,rest_too);
+                rest_too = strtokm(NULL, "/");
+
+            }
+            p=psprintf("%s",path_add);
             prev_split_character=last_split_character;
 
         }
         if(strcmp(last_split_character,"@")==0){
             temp_clean_data=psprintf("%s", p);
-temp_clean_data=strtok(temp_clean_data, ":/?#");
+            temp_clean_data=strtok(temp_clean_data, ":/?#");
             host=psprintf("%s", temp_clean_data);
         }else if(strcmp(last_split_character,":")==0){
             temp_clean_data=psprintf("%s", p);
-temp_clean_data=strtok(temp_clean_data, "/?#");
+            temp_clean_data=strtok(temp_clean_data, "/?#");
             port=psprintf("%s", temp_clean_data);
         }else if(strcmp(last_split_character,"/")==0){
             temp_clean_data=psprintf("%s", p);
-temp_clean_data=strtok(temp_clean_data, "?#");
+            temp_clean_data=strtok(temp_clean_data, "?#");
             path=psprintf("%s", temp_clean_data);
         }else if(strcmp(last_split_character,"?")==0){
             temp_clean_data=psprintf("%s", p);
-temp_clean_data=strtok(temp_clean_data, "#");
+            temp_clean_data=strtok(temp_clean_data, "#");
             query=psprintf("%s", temp_clean_data);
         }else if(strcmp(last_split_character,"#")==0){
             fragment=psprintf("%s", p);
@@ -448,19 +840,19 @@ temp_clean_data=strtok(temp_clean_data, "#");
         }
         if(strcmp(last_split_character,"@")==0){
             temp_clean_data=psprintf("%s", p);
-temp_clean_data=strtok(temp_clean_data, ":/?#");
+            temp_clean_data=strtok(temp_clean_data, ":/?#");
             host=psprintf("%s", temp_clean_data);
         }else if(strcmp(last_split_character,":")==0){
             temp_clean_data=psprintf("%s", p);
-temp_clean_data=strtok(temp_clean_data, "/?#");
+            temp_clean_data=strtok(temp_clean_data, "/?#");
             port=psprintf("%s", temp_clean_data);
         }else if(strcmp(last_split_character,"/")==0){
             temp_clean_data=psprintf("%s", p);
-temp_clean_data=strtok(temp_clean_data, "?#");
+            temp_clean_data=strtok(temp_clean_data, "?#");
             path=psprintf("%s", temp_clean_data);
         }else if(strcmp(last_split_character,"?")==0){
             temp_clean_data=psprintf("%s", p);
-temp_clean_data=strtok(temp_clean_data, "#");
+            temp_clean_data=strtok(temp_clean_data, "#");
             query=psprintf("%s", temp_clean_data);
         }else if(strcmp(last_split_character,"#")==0){
             fragment=psprintf("%s", p);
@@ -489,19 +881,19 @@ temp_clean_data=strtok(temp_clean_data, "#");
         }
         if(strcmp(last_split_character,"@")==0){
             temp_clean_data=psprintf("%s", p);
-temp_clean_data=strtok(temp_clean_data, ":/?#");
+            temp_clean_data=strtok(temp_clean_data, ":/?#");
             host=psprintf("%s", temp_clean_data);
         }else if(strcmp(last_split_character,":")==0){
             temp_clean_data=psprintf("%s", p);
-temp_clean_data=strtok(temp_clean_data, "/?#");
+            temp_clean_data=strtok(temp_clean_data, "/?#");
             port=psprintf("%s", temp_clean_data);
         }else if(strcmp(last_split_character,"/")==0){
             temp_clean_data=psprintf("%s", p);
-temp_clean_data=strtok(temp_clean_data, "?#");
+            temp_clean_data=strtok(temp_clean_data, "?#");
             path=psprintf("%s", temp_clean_data);
         }else if(strcmp(last_split_character,"?")==0){
             temp_clean_data=psprintf("%s", p);
-temp_clean_data=strtok(temp_clean_data, "#");
+            temp_clean_data=strtok(temp_clean_data, "#");
             query=psprintf("%s", temp_clean_data);
         }else if(strcmp(last_split_character,"#")==0){
             fragment=psprintf("%s", p);
@@ -569,7 +961,7 @@ temp_clean_data=strtok(temp_clean_data, "#");
         port_final=atoi(port);
     }
 
-   
+
     elog(INFO,"protocol: %s", protocol);
     elog(INFO,"userinfo: %s", userinfo);
     elog(INFO,"host: %s", host);
@@ -631,7 +1023,8 @@ static inline char* url_to_str(const URL * url)
 
 static inline char* url_spec_context(const URL * url, const char * spec)
 {
-    bool protocol_c = check_regex_part(false,spec, "^((.*):\\/\\/([^\\/\\?\\#]+@)?([^\\/\\?\\#]+)(:[0-9]{1,5})?(\\/[^\\/\\?\\#]+)*(\\/)?(\\?[^\\/\\?\\#]+)?(\\#[^\\/\\?\\#]+)?)$");
+    bool check_general = check_regex_part(true,spec, "^(([a-zA-Z]+:[\\/]+)?([^\\/\\?\\#\\:]+@)?([^\\/\\?\\#\\:]+)?(:[0-9]{1,5})?(\\/[^\\/\\?\\#\\:]*)*(\\/)?(\\?[^\\/\\?\\#\\:]+)?(\\#[^\\/\\?\\#\\:]+)?)$");
+    bool protocol_c = check_regex_part(false,spec, "^(([a-zA-Z]+:[\\/]+)([^\\/\\?\\#\\:]+@)?([^\\/\\?\\#\\:]+)?(:[0-9]{1,5})?(\\/[^\\/\\?\\#\\:]*)*(\\/)?(\\?[^\\/\\?\\#\\:]+)?(\\#[^\\/\\?\\#\\:]+)?)$");
 
     if(protocol_c==true){
         URL *urlresult=url_constructor_spec(spec);  
