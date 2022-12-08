@@ -6,27 +6,58 @@
 #include "utils/builtins.h"  /* for text_to_cstring */
 
 static URL* build_url_with_port(char *protocol, char *host, unsigned port, char *path){
-	
-    // Sizes = (0:Protocol, 1:Host, 2:Path)
-    int sizes[3];
-    sizes[0] = strlen(protocol);
-    sizes[1] = strlen(host);
-    sizes[2] = strlen(path);
 
-    size_t size = VARHDRSZ + sizes[0] + sizes[1] + sizes[2] + 30;
+    if(!check_regex_acceptable(protocol, "(^https$)|(^http$)|(^ftp$)|(^file$)|(^ssh$)")) {
+        ereport(ERROR,(
+            errcode(ERRCODE_INVALID_TEXT_REPRESENTATION),
+            errmsg("Unsupported/invalid `protocol`: \"%s\"", protocol)
+        ));
+    };
+
+    if(check_regex_acceptable(host, "(:\\/{1,})|([+?=_:,;'\\^\"!~`])")) {
+        ereport(ERROR,(
+            errcode(ERRCODE_INVALID_TEXT_REPRESENTATION),
+            errmsg("URL `host` must not contain protocol/port/path or invalid special characters: \"%s\"", host)
+        ));
+    };
+
+    // Check if path contains parts of protocol or domain
+    if(check_regex_acceptable(path, "(:/{1,})|([@'\\^\"!`\\\\*])")) {
+        ereport(ERROR,(
+            errcode(ERRCODE_INVALID_TEXT_REPRESENTATION),
+            errmsg("URL `path` must not contain protocol/domain/port or invalid special characters: \"%s\"", path)
+        ));
+    };
+
+    // Sizes = (0:Protocol, 1:Host, 2:Path)
+
+    int sizes[6] = {0,0,0,0,0,0};
+    sizes[0] = strlen(protocol);
+    sizes[2] = strlen(host);
+    sizes[3] = strlen(path);
+
+    size_t size = VARHDRSZ + sizes[0] + sizes[1] + sizes[2] + sizes[3] + sizes[4] + sizes[5] + (SEGMENTS * 5) + SEGMENTS;
     URL *u = (URL *) malloc(size);
     memset(u, 0, size);
     SET_VARSIZE(u, size);
 
     int offset = 0;
+    elog(INFO, "P: %s (%d), H: %s (%d), P: %s (%d)", protocol, sizes[0], host, sizes[2],  path, sizes[3]);
 
+    // offset = copyString(u, &u->protocol, protocol, sizes[0], offset);
+    // offset = copyString(u, &u->host, host, sizes[1], offset);
+    // offset = copyString(u, &u->path, path, sizes[2], offset);
     offset = copyString(u, &u->protocol, protocol, sizes[0], offset);
-    offset = copyString(u, &u->host, host, sizes[1], offset);
-    offset = copyString(u, &u->path, path, sizes[2], offset);
+    offset = copyNullString(u, &u->userinfo, sizes[1], offset);
+    offset = copyString(u, &u->host, host, sizes[2], offset);
+    offset = copyString(u, &u->path, path, sizes[3], offset);
+    offset = copyNullString(u, &u->userinfo, sizes[4], offset);
+    offset = copyNullString(u, &u->userinfo, sizes[5], offset);
+
     // Reset other fields, otherwise it would reference other memory parts thus leading to crash
-    u->userinfo = 0;
-    u->query = 0;
-    u->fragment = 0;
+    // u->userinfo = DEFAULT_URL_SEGMENT_LEN;
+    // u->query = DEFAULT_URL_SEGMENT_LEN;
+    // u->fragment = DEFAULT_URL_SEGMENT_LEN;
     u->port = port;
 
     return u;
@@ -43,7 +74,7 @@ static URL* build_url_with_all_parts(char *protocol, char *userinfo, char *host,
     sizes[4] = strlen(query);
     sizes[5] = strlen(fragment);
 
-    elog(INFO, "P: %s (%d), U: %s (%d), H: %s (%d), P: %s (%d), Q: %s (%d), F: %s (%d)", protocol, sizes[0], userinfo, sizes[1], host, sizes[2],  path, sizes[3], query, sizes[4], fragment, sizes[5]);
+    // elog(INFO, "P: %s (%d), U: %s (%d), H: %s (%d), P: %s (%d), Q: %s (%d), F: %s (%d)", protocol, sizes[0], userinfo, sizes[1], host, sizes[2],  path, sizes[3], query, sizes[4], fragment, sizes[5]);
 
     size_t size = VARHDRSZ + sizes[0] + sizes[1] + sizes[2] + sizes[3] + sizes[4] + sizes[5] + (SEGMENTS * 5) + SEGMENTS;
     URL *u = (URL *) palloc(size);
@@ -51,7 +82,7 @@ static URL* build_url_with_all_parts(char *protocol, char *userinfo, char *host,
 
     int offset = 0;
 
-    // int off[6] = {0,0,0,0,0,0};
+    int off[6] = {0,0,0,0,0,0};
     offset = copyString(u, &u->protocol, protocol, sizes[0], offset);
     off[0] = offset;
     offset = copyString(u, &u->userinfo, userinfo, sizes[1], offset);
@@ -213,31 +244,31 @@ static inline char* url_to_str(const URL * url)
 
     // Since all url segment contains size + 1, that's why we are not adding an extra + 1 in size
     // for example path contains an extra size for '\0'
-    if(url->userinfo > 1)   size += url->userinfo;
-    if(url->port > 1)       size += port_len;
-    if(url->path > 1)       size += url->path;
-    if(url->query > 1)      size += url->query;
-    if(url->fragment > 1)   size += url->fragment;
+    if(url->userinfo > DEFAULT_URL_SEGMENT_LEN)   size += url->userinfo;
+    if(url->port > DEFAULT_URL_SEGMENT_LEN)       size += port_len;
+    if(url->path > DEFAULT_URL_SEGMENT_LEN)       size += url->path;
+    if(url->query > DEFAULT_URL_SEGMENT_LEN)      size += url->query;
+    if(url->fragment > DEFAULT_URL_SEGMENT_LEN)   size += url->fragment;
 
     // The 5 extra char represents the :// after protocol and : and /
     result = malloc(size);
     memset(result, 0, size);
 
-    if(url->userinfo > 1)
+    if(url->userinfo > DEFAULT_URL_SEGMENT_LEN)
         result = psprintf("%s://%s@%s", protocol, userinfo, host);
     else
         result = psprintf("%s://%s", protocol, host);
 
-    if(url->port > 1)
+    if(url->port > DEFAULT_URL_SEGMENT_LEN)
         result = psprintf("%s:%d", result, url->port);
 
-    if(url->path > 1)
+    if(url->path > DEFAULT_URL_SEGMENT_LEN)
         result = psprintf("%s/%s", result, path);
 
-    if(url->query > 1)
+    if(url->query > DEFAULT_URL_SEGMENT_LEN)
         result = psprintf("%s?%s", result, query);
 
-    if(url->fragment > 1)
+    if(url->fragment > DEFAULT_URL_SEGMENT_LEN)
         result = psprintf("%s#%s", result, fragment);
 
     return result;
@@ -247,8 +278,8 @@ static inline char* getFile(const URL * url)
 {
     int size = 0;
 
-    if(url->path > 1)       size += url->path-1;
-    if(url->query > 1)      size += url->query-1;
+    if(url->path > DEFAULT_URL_SEGMENT_LEN)       size += url->path-1;
+    if(url->query > DEFAULT_URL_SEGMENT_LEN)      size += url->query-1;
 
     char *result;
     char *path;
@@ -256,11 +287,11 @@ static inline char* getFile(const URL * url)
     result = malloc(size + 1);
     memset(result, 0, size + 1);
     
-    if(url->path > 1){
+    if(url->path > DEFAULT_URL_SEGMENT_LEN){
         path = url->data + url->protocol + url->userinfo + url->host;
         result = psprintf("/%s", path);
     }
-    if(url->query > 1){
+    if(url->query > DEFAULT_URL_SEGMENT_LEN){
         path = url->data + url->protocol + url->userinfo + url->host + url->path;
         result = psprintf("%s?%s", result, path);
     }

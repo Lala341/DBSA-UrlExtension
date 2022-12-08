@@ -7,8 +7,9 @@
 #include "utils.h"
 #include "fmgr.h"
 
-
 PG_MODULE_MAGIC;
+
+#define DEFAULT_URL_SEGMENT_LEN 1
 
 typedef struct {
   char vl_len_[4];
@@ -42,6 +43,14 @@ int copyString(URL *url, int *dest, char* src, int size, int offset) {
     memset(url->data + offset, 0, s);
     *dest = s;
     memcpy(url->data + offset, src, size);
+    return offset + s;
+}
+
+// Copy a 0 to memory
+int copyNullString(URL *url, int *dest, int size, int offset) {
+    size_t s = size + 1;
+    memset(url->data + offset, 0, s);
+    *dest = s;
     return offset + s;
 }
 

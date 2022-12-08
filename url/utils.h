@@ -147,6 +147,36 @@ bool check_regex_part(bool showerror, char* str, char* data){
 
 }
 
+bool check_regex_acceptable(char* spec, char* data){
+
+    regex_t rx_p;
+    int rc_p;
+    regmatch_t pmatch_p[2];
+    char msg_p[100];
+    const char *p_regex =data;
+
+    if (0 != (rc_p = regcomp(&rx_p, p_regex, REG_EXTENDED))) {
+
+        regerror(rc_p, &rx_p, msg_p, 100); 
+        ereport(
+            ERROR,
+            (
+                errcode(ERRCODE_INVALID_TEXT_REPRESENTATION),
+                errmsg("Internal REGEX error in URL (Error Code: %d): \"%s\"", rc_p, msg_p)
+            )
+        );
+    }
+
+    
+    if (0 != (rc_p = regexec(&rx_p, spec, 2, pmatch_p, 0))) {
+        regfree(&rx_p);
+        return false;
+    }
+    regfree(&rx_p);
+    return true;
+
+}
+
 char *strtokm(char *str, const char *delim)
 {
     static char *tok;
