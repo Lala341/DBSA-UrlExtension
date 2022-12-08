@@ -22,6 +22,11 @@ RETURNS url
 AS '$libdir/url', 'construct_url_without_port'
 LANGUAGE C IMMUTABLE STRICT;
 
+CREATE OR REPLACE FUNCTION url(url, cstring)
+RETURNS url
+AS '$libdir/url', 'construct_url_with_context'
+LANGUAGE C IMMUTABLE STRICT;
+
 CREATE OR REPLACE FUNCTION get_protocol(url)
 RETURNS cstring
 AS '$libdir/url', 'get_protocol'
@@ -91,6 +96,11 @@ LANGUAGE C IMMUTABLE STRICT;
 CREATE OR REPLACE FUNCTION get_ref(url)
 RETURNS cstring
 AS '$libdir/url', 'get_ref'
+LANGUAGE C IMMUTABLE STRICT;
+
+CREATE OR REPLACE FUNCTION equals(url, url)
+RETURNS boolean
+AS '$libdir/url', 'equals'
 LANGUAGE C IMMUTABLE STRICT;
 
 CREATE OR REPLACE FUNCTION same_file(url, url)
