@@ -1027,7 +1027,7 @@ static inline char* url_spec_context(const URL * url, const char * spec)
     bool protocol_c = check_regex_part(false,spec, "^(([a-zA-Z]+:[\\/]+)([^\\/\\?\\#\\:]+@)?([^\\/\\?\\#\\:]+)?(:[0-9]{1,5})?(\\/[^\\/\\?\\#\\:]*)*(\\/)?(\\?[^\\/\\?\\#\\:]+)?(\\#[^\\/\\?\\#\\:]+)?)$");
 
 
-    if(strcmp(spec,"")==0){
+    if(strcmp(spec,"")==0||spec==NULL){
         return url;
     }
     if(protocol_c==true){
