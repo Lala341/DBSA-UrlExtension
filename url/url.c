@@ -5,36 +5,63 @@
 #include "url.h"
 #include "utils/builtins.h"  /* for text_to_cstring */
 
-static URL* build_url_with_port(char *protocol, char *host, unsigned port, char *path){
+void validateProtocol(char *protocol){
+    if (strlen(protocol) == 5 && compairChars("HTTPS", protocol, 5)) return;
+    if (strlen(protocol) == 4 && (compairChars("HTTP", protocol, 4) || compairChars("FILE", protocol, 4))) return;
+    if (strlen(protocol) == 3 && compairChars("FTP", protocol, 3)) return;
+    ereport(ERROR,(
+        errcode(ERRCODE_INVALID_TEXT_REPRESENTATION),
+        errmsg("Unsupported/invalid `protocol`: \"%s\"", protocol)
+    ));
+}
 
-    if(!check_regex_acceptable(protocol, "(^https$)|(^http$)|(^ftp$)|(^file$)|(^ssh$)")) {
-        ereport(ERROR,(
-            errcode(ERRCODE_INVALID_TEXT_REPRESENTATION),
-            errmsg("Unsupported/invalid `protocol`: \"%s\"", protocol)
-        ));
-    };
-
-    if(check_regex_acceptable(host, "(:\\/{1,})|([+?=_:,;'\\^\"!~`])")) {
+void validateHost(char *host){
+    if(check_regex_acceptable(host, "(:)|(\\/{1,})|([+?=_:,;'\\^\"!~`])")) {
         ereport(ERROR,(
             errcode(ERRCODE_INVALID_TEXT_REPRESENTATION),
             errmsg("URL `host` must not contain protocol/port/path or invalid special characters: \"%s\"", host)
         ));
     };
+}
 
-    // Check if path contains parts of protocol or domain
-    if(check_regex_acceptable(path, "(:/{1,})|([@'\\^\"!`\\\\*])")) {
+void validatePort(unsigned port){
+    if(port < 1 || port > 65535) {
+        ereport(ERROR,(
+            errcode(ERRCODE_INVALID_TEXT_REPRESENTATION),
+            errmsg("invalid `port`: \"%d\"", port)
+        ));
+    };
+}
+
+void validatePath(char *path){
+    if(check_regex_acceptable(path, "(:)|(/{2,})|([@'\\^\"!`\\\\*])")) {
         ereport(ERROR,(
             errcode(ERRCODE_INVALID_TEXT_REPRESENTATION),
             errmsg("URL `path` must not contain protocol/domain/port or invalid special characters: \"%s\"", path)
         ));
     };
+}
+
+static URL* build_url_with_port(char *protocol, char *host, unsigned port, char *path){
+
+    validateProtocol(protocol);
+    validateHost(host);
+    validatePort(port);
+    
+    // Check if path contains parts of protocol or domain
+    validatePath(char *path);
 
     // Sizes = (0:Protocol, 1:Host, 2:Path)
 
     int sizes[6] = {0,0,0,0,0,0};
     sizes[0] = strlen(protocol);
     sizes[2] = strlen(host);
-    sizes[3] = strlen(path);
+    if(path[0] == '/') {
+        sizes[3] = strlen(path) - 1;
+        memmove(path, path+1, strlen(path));
+    }
+    else
+        sizes[3] = strlen(path);
 
     size_t size = VARHDRSZ + sizes[0] + sizes[1] + sizes[2] + sizes[3] + sizes[4] + sizes[5] + (SEGMENTS * 5) + SEGMENTS;
     URL *u = (URL *) malloc(size);
