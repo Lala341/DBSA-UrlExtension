@@ -49,7 +49,7 @@ static URL* build_url_with_port(char *protocol, char *host, unsigned port, char 
     validatePort(port);
     
     // Check if path contains parts of protocol or domain
-    validatePath(char *path);
+    validatePath(path);
 
     // Sizes = (0:Protocol, 1:Host, 2:Path)
 
