@@ -249,7 +249,7 @@ path=psprintf("%s", path_add);
 
 
     }else{
-    bool general = check_regex_part(true,spec, "^(([a-zA-Z]+:[\\/]+)?([^\\/\\?\\#\\:]+@)?([^\\/\\?\\#\\:]+)?(:[0-9]{1,5})?(\\/[^\\/\\?\\#\\:]*)*(\\/)?(\\?[^\\/\\?\\#\\:]+)?(\\#[^\\/\\?\\#\\:]+)?)$");
+    bool general = check_regex_part(true,spec, "^(([a-zA-Z]+:[\\/]+)([^\\/\\?\\#\\:]+@)?([^\\/\\?\\#\\:]+)?(:[0-9]{1,5})?(\\/[^\\/\\?\\#\\:]*)*(\\/)?(\\?[^\\/\\?\\#\\:]+)?(\\#[^\\/\\?\\#\\:]+)?)$");
 
     bool protocol_c = check_regex_part(false,spec, "^(([a-zA-Z]+:[\\/]+)([^\\/\\?\\#\\:]+@)?([^\\/\\?\\#\\:]+)?(:[0-9]{1,5})?(\\/[^\\/\\?\\#\\:]*)*(\\/)?(\\?[^\\/\\?\\#\\:]+)?(\\#[^\\/\\?\\#\\:]+)?)$");
     bool host_c = check_regex_part(false,spec, "^(([a-zA-Z]+:[\\/]+)?([^\\/\\?\\#\\:]+@)?([^\\/\\?\\#\\:]+)(:[0-9]{1,5})?(\\/[^\\/\\?\\#\\:]*)*(\\/)?(\\?[^\\/\\?\\#\\:]+)?(\\#[^\\/\\?\\#\\:]+)?)$");
@@ -705,8 +705,8 @@ URL * url_constructor_spec_for_context(char* spec, URL * url){
     char *rest;
     bool first_part=false;
     char *first_part_s="";
-    char *first_split_character;
-    char *temp_clean_data;
+    char *first_split_character="";
+    char *temp_clean_data="";
     char *rest_too="";
 
     
@@ -1053,6 +1053,10 @@ static inline char* url_spec_context(const URL * url, const char * spec)
     bool check_general = check_regex_part(true,spec, "^(([a-zA-Z]+:[\\/]+)?([^\\/\\?\\#\\:]+@)?([^\\/\\?\\#\\:]+)?(:[0-9]{1,5})?(\\/[^\\/\\?\\#\\:]*)*(\\/)?(\\?[^\\/\\?\\#\\:]+)?(\\#[^\\/\\?\\#\\:]+)?)$");
     bool protocol_c = check_regex_part(false,spec, "^(([a-zA-Z]+:[\\/]+)([^\\/\\?\\#\\:]+@)?([^\\/\\?\\#\\:]+)?(:[0-9]{1,5})?(\\/[^\\/\\?\\#\\:]*)*(\\/)?(\\?[^\\/\\?\\#\\:]+)?(\\#[^\\/\\?\\#\\:]+)?)$");
 
+
+    if(strcmp(spec,"")==0||spec==NULL){
+        return url;
+    }
     if(protocol_c==true){
         URL *urlresult=url_constructor_spec(spec);  
         return urlresult;
