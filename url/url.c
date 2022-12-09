@@ -41,7 +41,14 @@ void validatePath(char *path){
         ));
     };
 }
+void sendErrorInput(){
 
+   ereport(ERROR,(
+            errcode(ERRCODE_INVALID_TEXT_REPRESENTATION),
+            errmsg("INPUT must not be NULL.")
+        ));
+    
+}
 static URL* build_url_with_port(char *protocol, char *host, unsigned port, char *path){
 
     validateProtocol(protocol);
@@ -828,7 +835,13 @@ static inline char* getFile(const URL * url)
  */
 PG_FUNCTION_INFO_V1(url_in);
 Datum url_in(PG_FUNCTION_ARGS){
+   
+   
     char *spec = PG_GETARG_CSTRING(0);
+    if(spec==NULL){
+        sendErrorInput();
+    }
+
     PG_RETURN_POINTER( url_constructor_spec(spec) );
 }
 
@@ -840,6 +853,7 @@ Datum url_out(PG_FUNCTION_ARGS)
 {
     VAR_ARR* input_arr = (VAR_ARR*) PG_GETARG_VARLENA_P(0);
     URL *url = (URL *)(&(input_arr->vl_dat));
+
     // pg_detoast_datum retrieves unpacks the detoasted input with alignment order intact
     url = (URL *) pg_detoast_datum(input_arr);
     PG_RETURN_CSTRING( url_to_str(url) );
@@ -853,6 +867,10 @@ Datum construct_url_with_port(PG_FUNCTION_ARGS){
     host = PG_GETARG_CSTRING(1);
     unsigned port = PG_GETARG_INT32(2);
     path = PG_GETARG_CSTRING(3);
+
+    if(protocol==NULL||host==NULL||port==NULL||path==NULL){
+        sendErrorInput();
+    }
     
     PG_RETURN_POINTER( build_url_with_port(protocol, host, port, path) );
 }
@@ -865,6 +883,10 @@ Datum construct_url_without_port(PG_FUNCTION_ARGS){
     host = PG_GETARG_CSTRING(1);
     path = PG_GETARG_CSTRING(2);
     unsigned port = extract_port_from_protocol(protocol);
+
+    if(protocol==NULL||host==NULL||path==NULL){
+        sendErrorInput();
+    }
     
     PG_RETURN_POINTER( build_url_with_port(protocol, host, port, path) );
 }
@@ -878,6 +900,10 @@ Datum construct_url_with_context(PG_FUNCTION_ARGS){
 
     char *spec = NULL;
     spec = PG_GETARG_CSTRING(1);
+
+    if(url==NULL||spec==NULL){
+        sendErrorInput();
+    }
     
     PG_RETURN_POINTER( url_spec_context(url, spec) );
 }
@@ -909,6 +935,10 @@ Datum text_to_url(PG_FUNCTION_ARGS)
     // char *str = DatumGetCString( DirectFunctionCall1(textout, PointerGetDatum(txt) ) );
     char *str = text_to_cstring(txt);
     URL * r = url_constructor_spec( str );
+
+    if(txt==NULL){
+        sendErrorInput();
+    }
     
     PG_RETURN_POINTER( r );
 }
@@ -920,6 +950,8 @@ PG_FUNCTION_INFO_V1(url_to_text);
 Datum url_to_text(PG_FUNCTION_ARGS)
 {
     URL *url = get_input_url((VAR_ARR*) PG_GETARG_VARLENA_P(0));
+
+   
     
     // URL *url = (URL *) PG_GETARG_POINTER(0);
     // char * url_str = url_to_str(url);
@@ -953,6 +985,7 @@ Datum get_authority(PG_FUNCTION_ARGS)
     URL *url = (URL *)(&(input_arr->vl_dat));
     url = (URL *) pg_detoast_datum(input_arr);
 
+    
     PG_RETURN_CSTRING( getAuthority(url) );
 }
 
@@ -962,6 +995,8 @@ Datum get_file(PG_FUNCTION_ARGS)
     VAR_ARR* input_arr = (VAR_ARR*) PG_GETARG_VARLENA_P(0);
     URL *url = (URL *)(&(input_arr->vl_dat));
     url = (URL *) pg_detoast_datum(input_arr);
+
+   
 
     PG_RETURN_CSTRING( getFile(url) );
 }
@@ -982,6 +1017,8 @@ Datum get_path(PG_FUNCTION_ARGS)
     URL *url = (URL *)(&(input_arr->vl_dat));
     url = (URL *) pg_detoast_datum(input_arr);
 
+   
+
     PG_RETURN_CSTRING( getPath(url) );
 }
 
@@ -995,6 +1032,8 @@ Datum same_host(PG_FUNCTION_ARGS)
     VAR_ARR* input_arr2 = (VAR_ARR*) PG_GETARG_VARLENA_P(1);
     URL *url2 = (URL *)(&(input_arr2->vl_dat));
     url2 = (URL *) pg_detoast_datum(input_arr2);
+
+   
 
     if(url1->host != url2->host)
         PG_RETURN_BOOL( false );
@@ -1011,6 +1050,7 @@ Datum get_default_port(PG_FUNCTION_ARGS)
     VAR_ARR* input_arr = (VAR_ARR*) PG_GETARG_VARLENA_P(0);
     URL *url = (URL *)(&(input_arr->vl_dat));
     url = (URL *) pg_detoast_datum(input_arr);
+    
     int defaultPort = extract_port_from_protocol(url->data);
     PG_RETURN_INT32( defaultPort == 0 ? -1 : defaultPort );
 }
@@ -1021,6 +1061,7 @@ Datum get_host(PG_FUNCTION_ARGS)
     VAR_ARR* input_arr = (VAR_ARR*) PG_GETARG_VARLENA_P(0);
     URL *url = (URL *)(&(input_arr->vl_dat));
     url = (URL *) pg_detoast_datum(input_arr);
+   
     
     PG_RETURN_CSTRING( psprintf("%s", url->data + url->protocol + url->userinfo));
 }
@@ -1031,6 +1072,8 @@ Datum get_port(PG_FUNCTION_ARGS)
     VAR_ARR* input_arr = (VAR_ARR*) PG_GETARG_VARLENA_P(0);
     URL *url = (URL *)(&(input_arr->vl_dat));
     url = (URL *) pg_detoast_datum(input_arr);
+
+    
 
     PG_RETURN_INT32( url->port > 0 ? url->port : -1 );
 }
@@ -1050,6 +1093,7 @@ Datum get_query(PG_FUNCTION_ARGS)
     VAR_ARR* input_arr = (VAR_ARR*) PG_GETARG_VARLENA_P(0);
     URL *url = (URL *)(&(input_arr->vl_dat));
     url = (URL *) pg_detoast_datum(input_arr);
+
 
     PG_RETURN_CSTRING( getQuery(url) );
 }
@@ -1084,6 +1128,7 @@ Datum same_file(PG_FUNCTION_ARGS)
     URL *url2 = (URL *)(&(input_arr2->vl_dat));
     url2 = (URL *) pg_detoast_datum(input_arr2);
 
+
     char *file1 = getFile(url1);
     char *file2 = getFile(url2);
 
@@ -1101,6 +1146,7 @@ Datum get_user_info(PG_FUNCTION_ARGS)
     VAR_ARR* input_arr = (VAR_ARR*) PG_GETARG_VARLENA_P(0);
     URL *url = (URL *)(&(input_arr->vl_dat));
     url = (URL *) pg_detoast_datum(input_arr);
+
 
     if(url->userinfo > 1){
         char *userinfo = url->data + url->protocol;
