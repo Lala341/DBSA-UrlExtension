@@ -9,7 +9,11 @@ This datatype is internally a *text pointer*. The functions and assumptions were
 1. None of the constructor attributes can be NULL. In this case an error is thrown. This is defined as "INPUT must not be NULL <name_parameter>
 2. The url follows the following format:
 > `<protocol>://<userinfo>@<host>:<port>/<path>?<query>#<fragment>` 
-
+In this case a URL must follow the order, defined in the expression.
+Examples of a valid URL are:
+`https://www.ulb.be/servlet/search?page=&site=e7-a0e0-b753bedcad22&q=test#1`
+Examples of an invalid URL are:
+`https://www.ulb.be/servlet/search?page=&site=e7-a0e0-b753bedcad22&q=test#12?e`
 
 
 > A valid URL as defined by Java \
