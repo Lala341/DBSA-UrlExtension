@@ -41,6 +41,61 @@ void validatePath(char *path){
         ));
     };
 }
+void sendErrorInput(){
+
+   ereport(ERROR,(
+            errcode(ERRCODE_INVALID_TEXT_REPRESENTATION),
+            errmsg("INPUT must not be NULL.")
+        ));
+    
+}
+static URL* build_url_with_port(char *protocol, char *host, unsigned port, char *path){
+
+    validateProtocol(protocol);
+    validateHost(host);
+    validatePort(port);
+    
+    // Check if path contains parts of protocol or domain
+    validatePath(path);
+
+    // Sizes = (0:Protocol, 1:Host, 2:Path)
+
+    int sizes[6] = {0,0,0,0,0,0};
+    sizes[0] = strlen(protocol);
+    sizes[2] = strlen(host);
+    if(path[0] == '/') {
+        sizes[3] = strlen(path) - 1;
+        memmove(path, path+1, strlen(path));
+    }
+    else
+        sizes[3] = strlen(path);
+
+    size_t size = VARHDRSZ + sizes[0] + sizes[1] + sizes[2] + sizes[3] + sizes[4] + sizes[5] + (SEGMENTS * 5) + SEGMENTS;
+    URL *u = (URL *) malloc(size);
+    memset(u, 0, size);
+    SET_VARSIZE(u, size);
+
+    int offset = 0;
+    elog(INFO, "P: %s (%d), H: %s (%d), P: %s (%d)", protocol, sizes[0], host, sizes[2],  path, sizes[3]);
+
+    // offset = copyString(u, &u->protocol, protocol, sizes[0], offset);
+    // offset = copyString(u, &u->host, host, sizes[1], offset);
+    // offset = copyString(u, &u->path, path, sizes[2], offset);
+    offset = copyString(u, &u->protocol, protocol, sizes[0], offset);
+    offset = copyNullString(u, &u->userinfo, sizes[1], offset);
+    offset = copyString(u, &u->host, host, sizes[2], offset);
+    offset = copyString(u, &u->path, path, sizes[3], offset);
+    offset = copyNullString(u, &u->userinfo, sizes[4], offset);
+    offset = copyNullString(u, &u->userinfo, sizes[5], offset);
+
+    // Reset other fields, otherwise it would reference other memory parts thus leading to crash
+    // u->userinfo = DEFAULT_URL_SEGMENT_LEN;
+    // u->query = DEFAULT_URL_SEGMENT_LEN;
+    // u->fragment = DEFAULT_URL_SEGMENT_LEN;
+    u->port = port;
+
+    return u;
+}
 
 static URL* build_url_with_all_parts(char *protocol, char *userinfo, char *host, unsigned port, char *path, char *query, char *fragment){
 	
@@ -163,13 +218,13 @@ URL * url_constructor_spec_regex(char* spec, char* regexnormal, char* regexfile)
     }else{
     bool general = check_regex_part(true,spec, regexnormal);
 
-    bool protocol_c = check_regex_part(false,spec, "^(([a-zA-Z]+:[\\/]+)([^\\/\\?\\#\\:]+@)?([^\\/\\?\\#\\:]+)?(:[0-9]{1,5})?(\\/[^\\/\\?\\#\\:]*)*(\\/)?(\\?[^\\/\\?\\#\\:]+)?(\\#[^\\/\\?\\#\\:]+)?)$");
-    bool host_c = check_regex_part(false,spec, "^(([a-zA-Z]+:[\\/]+)?([^\\/\\?\\#\\:]+@)?([^\\/\\?\\#\\:]+)(:[0-9]{1,5})?(\\/[^\\/\\?\\#\\:]*)*(\\/)?(\\?[^\\/\\?\\#\\:]+)?(\\#[^\\/\\?\\#\\:]+)?)$");
-    bool userinfo_c = check_regex_part(false,spec, "^(([a-zA-Z]+:[\\/]+)?([^\\/\\?\\#\\:]+@)([^\\/\\?\\#\\:]+)?(:[0-9]{1,5})?(\\/[^\\/\\?\\#\\:]*)*(\\/)?(\\?[^\\/\\?\\#\\:]+)?(\\#[^\\/\\?\\#\\:]+)?)$");
-    bool port_c = check_regex_part(false,spec, "^(([a-zA-Z]+:[\\/]+)?([^\\/\\?\\#\\:]+@)?([^\\/\\?\\#\\:]+)?(:[0-9]{1,5})(\\/[^\\/\\?\\#\\:]*)*(\\/)?(\\?[^\\/\\?\\#\\:]+)?(\\#[^\\/\\?\\#\\:]+)?)$");
-    bool path_c = check_regex_part(false,spec, "^(([a-zA-Z]+:[\\/]+)?([^\\/\\?\\#\\:]+@)?([^\\/\\?\\#\\:]+)?(:[0-9]{1,5})?(\\/[^\\/\\?\\#\\:]*)+(\\/)?(\\?[^\\/\\?\\#\\:]+)?(\\#[^\\/\\?\\#\\:]+)?)$");
-    bool query_c = check_regex_part(false,spec, "^(([a-zA-Z]+:[\\/]+)?([^\\/\\?\\#\\:]+@)?([^\\/\\?\\#\\:]+)?(:[0-9]{1,5})?(\\/[^\\/\\?\\#\\:]*)*(\\/)?(\\?[^\\/\\?\\#\\:]+)(\\#[^\\/\\?\\#\\:]+)?)$");
-    bool fragment_c = check_regex_part(false,spec, "^(([a-zA-Z]+:[\\/]+)?([^\\/\\?\\#\\:]+@)?([^\\/\\?\\#\\:]+)?(:[0-9]{1,5})?(\\/[^\\/\\?\\#\\:]*)*(\\/)?(\\?[^\\/\\?\\#\\:]+)?(\\#[^\\/\\?\\#\\:]+))$");
+    bool protocol_c = check_regex_part(false,spec, "^(([a-zA-Z]+:[\\/]+)([^\\/\\?\\#\\:]+@)?([^\\/\\?\\#\\:]+)?(:[0-9]{1,5})?(\\/[^\\/\\?\\#\\:]*)*(\\/)?(\\?[^\\/\\?\\#\\:]+)?(\\#[^\\/\\?\\#]+)?)$");
+    bool host_c = check_regex_part(false,spec, "^(([a-zA-Z]+:[\\/]+)?([^\\/\\?\\#\\:]+@)?([^\\/\\?\\#\\:]+)(:[0-9]{1,5})?(\\/[^\\/\\?\\#\\:]*)*(\\/)?(\\?[^\\/\\?\\#\\:]+)?(\\#[^\\/\\?\\#]+)?)$");
+    bool userinfo_c = check_regex_part(false,spec, "^(([a-zA-Z]+:[\\/]+)?([^\\/\\?\\#\\:]+@)([^\\/\\?\\#\\:]+)?(:[0-9]{1,5})?(\\/[^\\/\\?\\#\\:]*)*(\\/)?(\\?[^\\/\\?\\#\\:]+)?(\\#[^\\/\\?\\#]+)?)$");
+    bool port_c = check_regex_part(false,spec, "^(([a-zA-Z]+:[\\/]+)?([^\\/\\?\\#\\:]+@)?([^\\/\\?\\#\\:]+)?(:[0-9]{1,5})(\\/[^\\/\\?\\#\\:]*)*(\\/)?(\\?[^\\/\\?\\#\\:]+)?(\\#[^\\/\\?\\#]+)?)$");
+    bool path_c = check_regex_part(false,spec, "^(([a-zA-Z]+:[\\/]+)?([^\\/\\?\\#\\:]+@)?([^\\/\\?\\#\\:]+)?(:[0-9]{1,5})?(\\/[^\\/\\?\\#\\:]*)+(\\/)?(\\?[^\\/\\?\\#\\:]+)?(\\#[^\\/\\?\\#]+)?)$");
+    bool query_c = check_regex_part(false,spec, "^(([a-zA-Z]+:[\\/]+)?([^\\/\\?\\#\\:]+@)?([^\\/\\?\\#\\:]+)?(:[0-9]{1,5})?(\\/[^\\/\\?\\#\\:]*)*(\\/)?(\\?[^\\/\\?\\#\\:]+)(\\#[^\\/\\?\\#]+)?)$");
+    bool fragment_c = check_regex_part(false,spec, "^(([a-zA-Z]+:[\\/]+)?([^\\/\\?\\#\\:]+@)?([^\\/\\?\\#\\:]+)?(:[0-9]{1,5})?(\\/[^\\/\\?\\#\\:]*)*(\\/)?(\\?[^\\/\\?\\#\\:]+)?(\\#[^\\/\\?\\#]+))$");
    
 
     char *port = "";
@@ -579,7 +634,7 @@ URL * url_constructor_spec_regex(char* spec, char* regexnormal, char* regexfile)
 
 URL * url_constructor_spec(char* spec){
 
-    char* regexnormal="^(([a-zA-Z]+:[\\/]+)([^\\/\\?\\#\\:]+@)?([^\\/\\?\\#\\:]+)?(:[0-9]{1,5})?(\\/[^\\/\\?\\#\\:]*)*(\\/)?(\\?[^\\/\\?\\#\\:]+)?(\\#[^\\/\\?\\#\\:]+)?)$";
+    char* regexnormal="^(([a-zA-Z]+:[\\/]+)([^\\/\\?\\#\\:]+@)?([^\\/\\?\\#\\:]+)?(:[0-9]{1,5})?(\\/[^\\/\\?\\#\\:]*)*(\\/)?(\\?[^\\/\\?\\#\\:]+)?(\\#[^\\/\\?\\#]+)?)$";
     char* regexfile="^((file:[\\/]+)?([^\\/\\?\\#\\:]+)?(\\/[^\\/\\?\\#]*)*(\\/)?)$";
     URL *urlspec=url_constructor_spec_regex(spec,regexnormal , regexfile);
     return urlspec;
@@ -637,7 +692,7 @@ static URL* build_url_without_user_info(char *protocol, char *authority, char *p
 
 URL * url_constructor_spec_for_context(char* spec, URL * url){
 
-    char* regexnormal= "^(([a-zA-Z]+:[\\/]+)?([^\\/\\?\\#\\:]+@)?([^\\/\\?\\#\\:]+)?(:[0-9]{1,5})?(\\/[^\\/\\?\\#\\:]*)*(\\/)?(\\?[^\\/\\?\\#\\:]+)?(\\#[^\\/\\?\\#\\:]+)?)$";
+    char* regexnormal= "^(([a-zA-Z]+:[\\/]+)?([^\\/\\?\\#\\:]+@)?([^\\/\\?\\#\\:]+)?(:[0-9]{1,5})?(\\/[^\\/\\?\\#\\:]*)*(\\/)?(\\?[^\\/\\?\\#\\:]+)?(\\#[^\\/\\?\\#]+)?)$";
     char* regexfile="^((file:[\\/]+)?([^\\/\\?\\#\\:]+)?(\\/[^\\/\\?\\#]*)*(\\/)?)$";
 
     URL *urlspec=url_constructor_spec_regex(spec,regexnormal , regexfile);
@@ -701,8 +756,8 @@ URL * url_constructor_spec_for_context(char* spec, URL * url){
 } 
 static inline char* url_spec_context(const URL * url, const char * spec)
 {
-    bool check_general = check_regex_part(true,spec, "^(([a-zA-Z]+:[\\/]+)?([^\\/\\?\\#\\:]+@)?([^\\/\\?\\#\\:]+)?(:[0-9]{1,5})?(\\/[^\\/\\?\\#\\:]*)*(\\/)?(\\?[^\\/\\?\\#\\:]+)?(\\#[^\\/\\?\\#\\:]+)?)$");
-    bool protocol_c = check_regex_part(false,spec, "^(([a-zA-Z]+:[\\/]+)([^\\/\\?\\#\\:]+@)?([^\\/\\?\\#\\:]+)?(:[0-9]{1,5})?(\\/[^\\/\\?\\#\\:]*)*(\\/)?(\\?[^\\/\\?\\#\\:]+)?(\\#[^\\/\\?\\#\\:]+)?)$");
+    bool check_general = check_regex_part(true,spec, "^(([a-zA-Z]+:[\\/]+)?([^\\/\\?\\#\\:]+@)?([^\\/\\?\\#\\:]+)?(:[0-9]{1,5})?(\\/[^\\/\\?\\#\\:]*)*(\\/)?(\\?[^\\/\\?\\#\\:]+)?(\\#[^\\/\\?\\#]+)?)$");
+    bool protocol_c = check_regex_part(false,spec, "^(([a-zA-Z]+:[\\/]+)([^\\/\\?\\#\\:]+@)?([^\\/\\?\\#\\:]+)?(:[0-9]{1,5})?(\\/[^\\/\\?\\#\\:]*)*(\\/)?(\\?[^\\/\\?\\#\\:]+)?(\\#[^\\/\\?\\#]+)?)$");
 
 
     if(strcmp(spec,"")==0||spec==NULL){
@@ -794,7 +849,13 @@ static inline char* getFile(const URL * url)
  */
 PG_FUNCTION_INFO_V1(url_in);
 Datum url_in(PG_FUNCTION_ARGS){
+   
+   
     char *spec = PG_GETARG_CSTRING(0);
+    if(spec==NULL){
+        sendErrorInput();
+    }
+
     PG_RETURN_POINTER( url_constructor_spec(spec) );
 }
 
@@ -806,6 +867,18 @@ Datum url_out(PG_FUNCTION_ARGS)
 {
     VAR_ARR* input_arr = (VAR_ARR*) PG_GETARG_VARLENA_P(0);
     URL *url = (URL *)(&(input_arr->vl_dat));
+
+    // pg_detoast_datum retrieves unpacks the detoasted input with alignment order intact
+    url = (URL *) pg_detoast_datum(input_arr);
+    PG_RETURN_CSTRING( url_to_str(url) );
+}
+
+PG_FUNCTION_INFO_V1(url_to_string);
+Datum url_to_string(PG_FUNCTION_ARGS)
+{
+    VAR_ARR* input_arr = (VAR_ARR*) PG_GETARG_VARLENA_P(0);
+    URL *url = (URL *)(&(input_arr->vl_dat));
+
     // pg_detoast_datum retrieves unpacks the detoasted input with alignment order intact
     url = (URL *) pg_detoast_datum(input_arr);
     PG_RETURN_CSTRING( url_to_str(url) );
@@ -819,6 +892,10 @@ Datum construct_url_with_port(PG_FUNCTION_ARGS){
     host = PG_GETARG_CSTRING(1);
     unsigned port = PG_GETARG_INT32(2);
     path = PG_GETARG_CSTRING(3);
+
+    if(protocol==NULL||host==NULL||port==NULL||path==NULL){
+        sendErrorInput();
+    }
     
     PG_RETURN_POINTER( build_url_with_port(protocol, host, port, path) );
 }
@@ -831,6 +908,10 @@ Datum construct_url_without_port(PG_FUNCTION_ARGS){
     host = PG_GETARG_CSTRING(1);
     path = PG_GETARG_CSTRING(2);
     unsigned port = extract_port_from_protocol(protocol);
+
+    if(protocol==NULL||host==NULL||path==NULL){
+        sendErrorInput();
+    }
     
     PG_RETURN_POINTER( build_url_with_port(protocol, host, port, path) );
 }
@@ -844,6 +925,10 @@ Datum construct_url_with_context(PG_FUNCTION_ARGS){
 
     char *spec = NULL;
     spec = PG_GETARG_CSTRING(1);
+
+    if(url==NULL||spec==NULL){
+        sendErrorInput();
+    }
     
     PG_RETURN_POINTER( url_spec_context(url, spec) );
 }
@@ -875,6 +960,10 @@ Datum text_to_url(PG_FUNCTION_ARGS)
     // char *str = DatumGetCString( DirectFunctionCall1(textout, PointerGetDatum(txt) ) );
     char *str = text_to_cstring(txt);
     URL * r = url_constructor_spec( str );
+
+    if(txt==NULL){
+        sendErrorInput();
+    }
     
     PG_RETURN_POINTER( r );
 }
@@ -886,6 +975,8 @@ PG_FUNCTION_INFO_V1(url_to_text);
 Datum url_to_text(PG_FUNCTION_ARGS)
 {
     URL *url = get_input_url((VAR_ARR*) PG_GETARG_VARLENA_P(0));
+
+   
     
     // URL *url = (URL *) PG_GETARG_POINTER(0);
     // char * url_str = url_to_str(url);
@@ -919,6 +1010,7 @@ Datum get_authority(PG_FUNCTION_ARGS)
     URL *url = (URL *)(&(input_arr->vl_dat));
     url = (URL *) pg_detoast_datum(input_arr);
 
+    
     PG_RETURN_CSTRING( getAuthority(url) );
 }
 
@@ -928,6 +1020,8 @@ Datum get_file(PG_FUNCTION_ARGS)
     VAR_ARR* input_arr = (VAR_ARR*) PG_GETARG_VARLENA_P(0);
     URL *url = (URL *)(&(input_arr->vl_dat));
     url = (URL *) pg_detoast_datum(input_arr);
+
+   
 
     PG_RETURN_CSTRING( getFile(url) );
 }
@@ -948,6 +1042,8 @@ Datum get_path(PG_FUNCTION_ARGS)
     URL *url = (URL *)(&(input_arr->vl_dat));
     url = (URL *) pg_detoast_datum(input_arr);
 
+   
+
     PG_RETURN_CSTRING( getPath(url) );
 }
 
@@ -961,6 +1057,8 @@ Datum same_host(PG_FUNCTION_ARGS)
     VAR_ARR* input_arr2 = (VAR_ARR*) PG_GETARG_VARLENA_P(1);
     URL *url2 = (URL *)(&(input_arr2->vl_dat));
     url2 = (URL *) pg_detoast_datum(input_arr2);
+
+   
 
     if(url1->host != url2->host)
         PG_RETURN_BOOL( false );
@@ -977,6 +1075,7 @@ Datum get_default_port(PG_FUNCTION_ARGS)
     VAR_ARR* input_arr = (VAR_ARR*) PG_GETARG_VARLENA_P(0);
     URL *url = (URL *)(&(input_arr->vl_dat));
     url = (URL *) pg_detoast_datum(input_arr);
+    
     int defaultPort = extract_port_from_protocol(url->data);
     PG_RETURN_INT32( defaultPort == 0 ? -1 : defaultPort );
 }
@@ -987,6 +1086,7 @@ Datum get_host(PG_FUNCTION_ARGS)
     VAR_ARR* input_arr = (VAR_ARR*) PG_GETARG_VARLENA_P(0);
     URL *url = (URL *)(&(input_arr->vl_dat));
     url = (URL *) pg_detoast_datum(input_arr);
+   
     
     PG_RETURN_CSTRING( psprintf("%s", url->data + url->protocol + url->userinfo));
 }
@@ -997,6 +1097,8 @@ Datum get_port(PG_FUNCTION_ARGS)
     VAR_ARR* input_arr = (VAR_ARR*) PG_GETARG_VARLENA_P(0);
     URL *url = (URL *)(&(input_arr->vl_dat));
     url = (URL *) pg_detoast_datum(input_arr);
+
+    
 
     PG_RETURN_INT32( url->port > 0 ? url->port : -1 );
 }
@@ -1016,6 +1118,7 @@ Datum get_query(PG_FUNCTION_ARGS)
     VAR_ARR* input_arr = (VAR_ARR*) PG_GETARG_VARLENA_P(0);
     URL *url = (URL *)(&(input_arr->vl_dat));
     url = (URL *) pg_detoast_datum(input_arr);
+
 
     PG_RETURN_CSTRING( getQuery(url) );
 }
@@ -1050,6 +1153,7 @@ Datum same_file(PG_FUNCTION_ARGS)
     URL *url2 = (URL *)(&(input_arr2->vl_dat));
     url2 = (URL *) pg_detoast_datum(input_arr2);
 
+
     char *file1 = getFile(url1);
     char *file2 = getFile(url2);
 
@@ -1067,6 +1171,7 @@ Datum get_user_info(PG_FUNCTION_ARGS)
     VAR_ARR* input_arr = (VAR_ARR*) PG_GETARG_VARLENA_P(0);
     URL *url = (URL *)(&(input_arr->vl_dat));
     url = (URL *) pg_detoast_datum(input_arr);
+
 
     if(url->userinfo > 1){
         char *userinfo = url->data + url->protocol;
