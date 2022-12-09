@@ -859,6 +859,17 @@ Datum url_out(PG_FUNCTION_ARGS)
     PG_RETURN_CSTRING( url_to_str(url) );
 }
 
+PG_FUNCTION_INFO_V1(url_to_string);
+Datum url_to_string(PG_FUNCTION_ARGS)
+{
+    VAR_ARR* input_arr = (VAR_ARR*) PG_GETARG_VARLENA_P(0);
+    URL *url = (URL *)(&(input_arr->vl_dat));
+
+    // pg_detoast_datum retrieves unpacks the detoasted input with alignment order intact
+    url = (URL *) pg_detoast_datum(input_arr);
+    PG_RETURN_CSTRING( url_to_str(url) );
+}
+
 PG_FUNCTION_INFO_V1(construct_url_with_port);
 Datum construct_url_with_port(PG_FUNCTION_ARGS){
 

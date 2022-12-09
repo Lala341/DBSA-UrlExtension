@@ -32,6 +32,11 @@ RETURNS cstring
 AS '$libdir/url', 'get_protocol'
 LANGUAGE C IMMUTABLE STRICT;
 
+CREATE OR REPLACE FUNCTION to_string(url)
+RETURNS cstring
+AS '$libdir/url', 'url_to_string'
+LANGUAGE C IMMUTABLE STRICT;
+
 CREATE TYPE url (
 	INPUT          = url_in,
 	OUTPUT         = url_out,
