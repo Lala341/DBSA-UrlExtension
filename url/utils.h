@@ -135,7 +135,7 @@ bool check_regex_part(bool showerror, char* str, char* data){
                 ERROR,
                 (
                     errcode(ERRCODE_INVALID_TEXT_REPRESENTATION),
-                    errmsg("Invalid URL pattern provided (Error Code: %d): \"%s\"", rc_p, spec)
+                    errmsg("Unsupported/invalid URL spec provided (Error Code: %d): \"%s\"", rc_p, spec)
                 )
             );
         }
