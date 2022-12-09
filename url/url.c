@@ -41,11 +41,12 @@ void validatePath(char *path){
         ));
     };
 }
-void sendErrorInput(){
+
+void sendErrorInput(char *msg){
 
    ereport(ERROR,(
             errcode(ERRCODE_INVALID_TEXT_REPRESENTATION),
-            errmsg("INPUT must not be NULL.")
+            errmsg("INPUT must not be NULL, %s.", msg)
         ));
     
 }
@@ -596,16 +597,23 @@ URL * url_constructor_spec(char* spec){
 static URL* build_url_with_port(char *protocol, char *host, unsigned port, char *path){
 
     validateProtocol(protocol);
-    validateHost(host);
-    validatePort(port);
-    validatePath(path);
+    char * spec = psprintf("%s://", protocol);
 
-    char * spec = protocol;
-    spec = psprintf("%s://%s", spec, host);
-    spec = psprintf("%s:%d", spec, port);
-    if(path[0] == '/') 
-        memmove(path, path+1, strlen(path));
-    spec = psprintf("%s/%s", spec, path);
+    if(host != NULL){
+        validateHost(host);
+        spec = psprintf("%s%s", spec, host);
+        validatePort(port);
+        spec = psprintf("%s:%d", spec, port);
+    }
+    if(path != NULL){
+        validatePath(path);
+        if(path[0] == '/') 
+            memmove(path, path+1, strlen(path));
+        if(host != NULL)
+            spec = psprintf("%s/%s", spec, path);
+        else 
+            spec = psprintf("%s%s", spec, path);
+    }
     return url_constructor_spec(spec);
 }
 
@@ -806,7 +814,7 @@ Datum url_in(PG_FUNCTION_ARGS){
    
     char *spec = PG_GETARG_CSTRING(0);
     if(spec==NULL){
-        sendErrorInput();
+        sendErrorInput("spec");
     }
 
     PG_RETURN_POINTER( url_constructor_spec(spec) );
@@ -846,8 +854,8 @@ Datum construct_url_with_port(PG_FUNCTION_ARGS){
     unsigned port = PG_GETARG_INT32(2);
     path = PG_GETARG_CSTRING(3);
 
-    if(protocol==NULL||host==NULL||port==NULL||path==NULL){
-        sendErrorInput();
+    if(protocol==NULL||port==NULL){
+        sendErrorInput("protocol or port");
     }
     
     PG_RETURN_POINTER( build_url_with_port(protocol, host, port, path) );
@@ -863,7 +871,7 @@ Datum construct_url_without_port(PG_FUNCTION_ARGS){
     unsigned port = extract_port_from_protocol(protocol);
 
     if(protocol==NULL||host==NULL||path==NULL){
-        sendErrorInput();
+        sendErrorInput("protocol or host or path");
     }
     
     PG_RETURN_POINTER( build_url_with_port(protocol, host, port, path) );
@@ -880,7 +888,7 @@ Datum construct_url_with_context(PG_FUNCTION_ARGS){
     spec = PG_GETARG_CSTRING(1);
 
     if(url==NULL||spec==NULL){
-        sendErrorInput();
+        sendErrorInput("url or spec");
     }
     
     PG_RETURN_POINTER( url_spec_context(url, spec) );
@@ -915,7 +923,7 @@ Datum text_to_url(PG_FUNCTION_ARGS)
     URL * r = url_constructor_spec( str );
 
     if(txt==NULL){
-        sendErrorInput();
+        sendErrorInput("text");
     }
     
     PG_RETURN_POINTER( r );
