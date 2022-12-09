@@ -42,54 +42,6 @@ void validatePath(char *path){
     };
 }
 
-static URL* build_url_with_port(char *protocol, char *host, unsigned port, char *path){
-
-    validateProtocol(protocol);
-    validateHost(host);
-    validatePort(port);
-    
-    // Check if path contains parts of protocol or domain
-    validatePath(path);
-
-    // Sizes = (0:Protocol, 1:Host, 2:Path)
-
-    int sizes[6] = {0,0,0,0,0,0};
-    sizes[0] = strlen(protocol);
-    sizes[2] = strlen(host);
-    if(path[0] == '/') {
-        sizes[3] = strlen(path) - 1;
-        memmove(path, path+1, strlen(path));
-    }
-    else
-        sizes[3] = strlen(path);
-
-    size_t size = VARHDRSZ + sizes[0] + sizes[1] + sizes[2] + sizes[3] + sizes[4] + sizes[5] + (SEGMENTS * 5) + SEGMENTS;
-    URL *u = (URL *) malloc(size);
-    memset(u, 0, size);
-    SET_VARSIZE(u, size);
-
-    int offset = 0;
-    elog(INFO, "P: %s (%d), H: %s (%d), P: %s (%d)", protocol, sizes[0], host, sizes[2],  path, sizes[3]);
-
-    // offset = copyString(u, &u->protocol, protocol, sizes[0], offset);
-    // offset = copyString(u, &u->host, host, sizes[1], offset);
-    // offset = copyString(u, &u->path, path, sizes[2], offset);
-    offset = copyString(u, &u->protocol, protocol, sizes[0], offset);
-    offset = copyNullString(u, &u->userinfo, sizes[1], offset);
-    offset = copyString(u, &u->host, host, sizes[2], offset);
-    offset = copyString(u, &u->path, path, sizes[3], offset);
-    offset = copyNullString(u, &u->userinfo, sizes[4], offset);
-    offset = copyNullString(u, &u->userinfo, sizes[5], offset);
-
-    // Reset other fields, otherwise it would reference other memory parts thus leading to crash
-    // u->userinfo = DEFAULT_URL_SEGMENT_LEN;
-    // u->query = DEFAULT_URL_SEGMENT_LEN;
-    // u->fragment = DEFAULT_URL_SEGMENT_LEN;
-    u->port = port;
-
-    return u;
-}
-
 static URL* build_url_with_all_parts(char *protocol, char *userinfo, char *host, unsigned port, char *path, char *query, char *fragment){
 	
     // Sizes = (0:Protocol, 1:Host, 2:Path, 3:Query, 4:Fragment)
@@ -125,40 +77,6 @@ static URL* build_url_with_all_parts(char *protocol, char *userinfo, char *host,
     // elog(INFO, "P: 0, U: %d, H: %d, P: %d, Q: %d, F: %d, after: %d", off[0], off[1], off[2], off[3], off[4], off[5]);
 
     u->port = port;
-    // elog(INFO,"P:%d H:%d, Path:%d, Q:%d, F:%d OFF:%d", u->protocol, u->host, u->path, u->query, u->fragment, offset);
-    return u;
-}
-
-static URL* build_url_without_user_info(char *protocol, char *authority, char *path, char *query, char *fragment){
-	
-    // Sizes = (0:Protocol, 1:Host, 2:Path, 3:Query, 4:Fragment)
-    int sizes[5];
-    sizes[0] = strlen(protocol);
-    sizes[1] = strlen(authority);
-    sizes[2] = strlen(path);
-    sizes[3] = strlen(query);
-    sizes[4] = strlen(fragment);
-
-    elog(INFO, "P: %s (%d), A: %s (%d), P: %s (%d), Q: %s (%d), F: %s (%d)", protocol, sizes[0], authority, sizes[1],  path, sizes[2], query, sizes[3], fragment, sizes[4]);
-
-    size_t size = VARHDRSZ + sizes[0] + sizes[1] + sizes[2] + sizes[3] + sizes[4] + (SEGMENTS * 5) + SEGMENTS;
-    URL *u = (URL *) palloc(size);
-    SET_VARSIZE(u, size);
-
-    int offset = 0;
-
-    int off[5] = {0,0,0,0,0};
-    offset = copyString(u, &u->protocol, protocol, sizes[0], offset);
-    off[0] = offset;
-    offset = copyString(u, &u->host, authority, sizes[1], offset);
-    off[1] = offset;
-    offset = copyString(u, &u->path, path, sizes[2], offset);
-    off[2] = offset;
-    offset = copyString(u, &u->query, query, sizes[3], offset);
-    off[3] = offset;
-    offset = copyString(u, &u->fragment, fragment, sizes[4], offset);
-    off[4] = offset;
-    // elog(INFO, "P: 0, H: %d, P: %d, Q: %d, F: %d, after: %d", off[0], off[1], off[2], off[3], off[4]);
     // elog(INFO,"P:%d H:%d, Path:%d, Q:%d, F:%d OFF:%d", u->protocol, u->host, u->path, u->query, u->fragment, offset);
     return u;
 }
@@ -659,14 +577,62 @@ URL * url_constructor_spec_regex(char* spec, char* regexnormal, char* regexfile)
     return url;
 }   
 
-
 URL * url_constructor_spec(char* spec){
 
     char* regexnormal="^(([a-zA-Z]+:[\\/]+)([^\\/\\?\\#\\:]+@)?([^\\/\\?\\#\\:]+)?(:[0-9]{1,5})?(\\/[^\\/\\?\\#\\:]*)*(\\/)?(\\?[^\\/\\?\\#\\:]+)?(\\#[^\\/\\?\\#\\:]+)?)$";
     char* regexfile="^((file:[\\/]+)?([^\\/\\?\\#\\:]+)?(\\/[^\\/\\?\\#]*)*(\\/)?)$";
-
     URL *urlspec=url_constructor_spec_regex(spec,regexnormal , regexfile);
     return urlspec;
+}
+
+static URL* build_url_with_port(char *protocol, char *host, unsigned port, char *path){
+
+    validateProtocol(protocol);
+    validateHost(host);
+    validatePort(port);
+    validatePath(path);
+
+    char * spec = protocol;
+    spec = psprintf("%s://%s", spec, host);
+    spec = psprintf("%s:%d", spec, port);
+    if(path[0] == '/') 
+        memmove(path, path+1, strlen(path));
+    spec = psprintf("%s/%s", spec, path);
+    return url_constructor_spec(spec);
+}
+
+static URL* build_url_without_user_info(char *protocol, char *authority, char *path, char *query, char *fragment){
+	
+    // Sizes = (0:Protocol, 1:Host, 2:Path, 3:Query, 4:Fragment)
+    int sizes[5];
+    sizes[0] = strlen(protocol);
+    sizes[1] = strlen(authority);
+    sizes[2] = strlen(path);
+    sizes[3] = strlen(query);
+    sizes[4] = strlen(fragment);
+
+    elog(INFO, "P: %s (%d), A: %s (%d), P: %s (%d), Q: %s (%d), F: %s (%d)", protocol, sizes[0], authority, sizes[1],  path, sizes[2], query, sizes[3], fragment, sizes[4]);
+
+    size_t size = VARHDRSZ + sizes[0] + sizes[1] + sizes[2] + sizes[3] + sizes[4] + (SEGMENTS * 5) + SEGMENTS;
+    URL *u = (URL *) palloc(size);
+    SET_VARSIZE(u, size);
+
+    int offset = 0;
+
+    int off[5] = {0,0,0,0,0};
+    offset = copyString(u, &u->protocol, protocol, sizes[0], offset);
+    off[0] = offset;
+    offset = copyString(u, &u->host, authority, sizes[1], offset);
+    off[1] = offset;
+    offset = copyString(u, &u->path, path, sizes[2], offset);
+    off[2] = offset;
+    offset = copyString(u, &u->query, query, sizes[3], offset);
+    off[3] = offset;
+    offset = copyString(u, &u->fragment, fragment, sizes[4], offset);
+    off[4] = offset;
+    // elog(INFO, "P: 0, H: %d, P: %d, Q: %d, F: %d, after: %d", off[0], off[1], off[2], off[3], off[4]);
+    // elog(INFO,"P:%d H:%d, Path:%d, Q:%d, F:%d OFF:%d", u->protocol, u->host, u->path, u->query, u->fragment, offset);
+    return u;
 }
 
 URL * url_constructor_spec_for_context(char* spec, URL * url){
