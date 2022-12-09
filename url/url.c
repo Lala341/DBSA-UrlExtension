@@ -49,53 +49,6 @@ void sendErrorInput(){
         ));
     
 }
-static URL* build_url_with_port(char *protocol, char *host, unsigned port, char *path){
-
-    validateProtocol(protocol);
-    validateHost(host);
-    validatePort(port);
-    
-    // Check if path contains parts of protocol or domain
-    validatePath(path);
-
-    // Sizes = (0:Protocol, 1:Host, 2:Path)
-
-    int sizes[6] = {0,0,0,0,0,0};
-    sizes[0] = strlen(protocol);
-    sizes[2] = strlen(host);
-    if(path[0] == '/') {
-        sizes[3] = strlen(path) - 1;
-        memmove(path, path+1, strlen(path));
-    }
-    else
-        sizes[3] = strlen(path);
-
-    size_t size = VARHDRSZ + sizes[0] + sizes[1] + sizes[2] + sizes[3] + sizes[4] + sizes[5] + (SEGMENTS * 5) + SEGMENTS;
-    URL *u = (URL *) malloc(size);
-    memset(u, 0, size);
-    SET_VARSIZE(u, size);
-
-    int offset = 0;
-    elog(INFO, "P: %s (%d), H: %s (%d), P: %s (%d)", protocol, sizes[0], host, sizes[2],  path, sizes[3]);
-
-    // offset = copyString(u, &u->protocol, protocol, sizes[0], offset);
-    // offset = copyString(u, &u->host, host, sizes[1], offset);
-    // offset = copyString(u, &u->path, path, sizes[2], offset);
-    offset = copyString(u, &u->protocol, protocol, sizes[0], offset);
-    offset = copyNullString(u, &u->userinfo, sizes[1], offset);
-    offset = copyString(u, &u->host, host, sizes[2], offset);
-    offset = copyString(u, &u->path, path, sizes[3], offset);
-    offset = copyNullString(u, &u->userinfo, sizes[4], offset);
-    offset = copyNullString(u, &u->userinfo, sizes[5], offset);
-
-    // Reset other fields, otherwise it would reference other memory parts thus leading to crash
-    // u->userinfo = DEFAULT_URL_SEGMENT_LEN;
-    // u->query = DEFAULT_URL_SEGMENT_LEN;
-    // u->fragment = DEFAULT_URL_SEGMENT_LEN;
-    u->port = port;
-
-    return u;
-}
 
 static URL* build_url_with_all_parts(char *protocol, char *userinfo, char *host, unsigned port, char *path, char *query, char *fragment){
 	
