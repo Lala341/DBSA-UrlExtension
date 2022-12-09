@@ -3,7 +3,7 @@ CREATE EXTENSION url;
 Create table testurl(Emri url);
 CREATE INDEX testidx ON testurl(Emri);
 
--###URL(varchar spec)
+--###URL(varchar spec)
 Insert into testurl values(url('https://www.ulb.be/servlet/search?page=&site=%23&l=1&RH=1538989254560&beanKey=150bfcee-1f87-11e7-a0e0-b753bedcad22&q=test#1')); --Correct format: <scheme>://<authority><path>?<query>#<fragment>
 Insert into testurl values(url('http://www.ulb.be:8080/en')); --test port
 Insert into testurl values(url('https://www.ulb.be/en')); -- test get default port
@@ -27,6 +27,8 @@ insert into testurl values( url(url('http://www.ulb.be/en')::url, '/?page_id=262
 --boolean equals(URL url1, URL url2) Compares two URLs for equality. This operation must be index-supported.
 Select * from testurl
 where equals (url('http://www.ulb.be/en'), url('http://www.ulb.be/en'));
+--Other way to test
+Select equals (url('http://www.ulb.be/en'), url('http://www.ulb.be/en'));
 --varchar getAuthority() Gets the authority part of this URL. 
 Select get_Authority(url('https://www.ulb.be/servlet/search?page=&site=%23&l=1&RH=1538989254560&beanKey=150bfcee-1f87-11e7-a0e0-b753bedcad22&q=test#1'));
 --int getDefaultPort() Gets the default port number of the protocol associated with this URL.
@@ -44,17 +46,16 @@ Select get_Host(url('https://www.ulb.be/servlet/search?page=&site=%23&l=1&RH=153
 --varchar getQuery() Gets the query part of this URL. 
  Select get_Query(url('https://www.ulb.be/servlet/search?page=&site=%23&l=1&RH=1538989254560&beanKey=150bfcee-1f87-11e7-a0e0-b753bedcad22&q=test#1'));
 --String getRef() Gets the anchor (also known as the "reference") of this URL. 
-Select get_Ref(url('https://blog.apastyle.org/apastyle/2011/07/punctuating-the-reference-list-entry.html')); 
+Select get_Ref(url('https://blog.apastyle.org/apastyle/2011/07/punctuating-the-reference-list-entry.html#123')); 
 --String getUserInfo() Gets the userInfo part of this URL. 
 Select get_User_Info(url('https://username@apastyle.org/apastyle/2011/07/punctuating-the-reference-list-entry.html'));
 --boolean sameFile(URL url1, URL url2) Compares two URLs, excluding the fragment component. 
-Select * from testurl
-where equals(url('https://www.ulb.be/servlet/search?page=&site=%23&l=1&RH=1538989254560&beanKey=150bfcee-1f87-11e7-a0e0-b753bedcad22&q=test#1'), url('https://www.ulb.be/servlet/search?page=&site=%23&l=1&RH=1538989254560&beanKey=150bfcee-1f87-11e7-a0e0-b753bedcad22&q=test#1'));
+Select same_file(url('https://www.ulb.be/servlet/search?page=&site=%23&l=1&RH=1538989254560&beanKey=150bfcee-1f87-11e7-a0e0-b753bedcad22&q=test#1'), url('https://www.ulb.be/servlet/search?page=&site=%23&l=1&RH=1538989254560&beanKey=150bfcee-1f87-11e7-a0e0-b753bedcad22&q=test#1'));
 --This operation must be index supported. boolean 
 --sameHost(URL url1, URL url2) Compares the hosts of two URLs. This operation must be index-supported. 
-where equals (url('https://www.ulb.be/servlet/search?page=&site=%23&l=1&RH=1538989254560&beanKey=150bfcee-1f87-11e7-a0e0-b753bedcad22&q=test#1'), url('https://www.ulb.be/servlet/search?page=&site=%23&l=1&RH=1538989254560&beanKey=150bfcee-1f87-11e7-a0e0-b753bedcad22&q=test#1'));
+Select same_host(url('https://www.ulb.be/servlet/search?page=&site=%23&l=1&RH=1538989254560&beanKey=150bfcee-1f87-11e7-a0e0-b753bedcad22&q=test#1'), url('https://www.ulb.be/servlet/search?page=&site=%23&l=1&RH=1538989254560&beanKey=150bfcee-1f87-11e7-a0e0-b753bedcad22&q=test#1'));
 --varchar toString() Constructs a string representation of this URL
-Select toString(url('https://www.ulb.be/servlet/search?page=&site=%23&l=1&RH=1538989254560&beanKey=150bfcee-1f87-11e7-a0e0-b753bedcad22&q=test#1'));
+Select url_to_string(url('https://www.ulb.be/servlet/search?page=&site=%23&l=1&RH=1538989254560&beanKey=150bfcee-1f87-11e7-a0e0-b753bedcad22&q=test#1'));
 
 --Drop table testurl;
 
