@@ -634,9 +634,7 @@ URL * url_constructor_spec_regex(char* spec, char* regexnormal, char* regexfile)
     }
    
     }
-    elog(INFO, "protocol:%s",protocol );
-    elog(INFO, "host:%s",host );
-     URL *url = build_url_with_all_parts(protocol, userinfo, host, port_final, path, query, fragment);
+    URL *url = build_url_with_all_parts(protocol, userinfo, host, port_final, path, query, fragment);
 
     return url;
 }   
