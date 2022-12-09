@@ -18,9 +18,9 @@ Insert into testurl values(url('https','www.ulb.be',8080,'enrolment/test1/324wer
 Insert into testurl values(url('https','www.ulb.be','enrolment' ));--Creates a URL from the specified @NotNullOrEmpty protocol, host, and NotNull file
 
 --###URL(URL context, varchar spec)
-insert into testurl values( url(url('http://www.ulb.be/en')::url, 'http://www.test.com/co/get-help-with-french'));
-insert into testurl values( url(url('http://www.ulb.be/en')::url, '/co/get-help-with-french'));
-insert into testurl values( url(url('http://www.ulb.be/en')::url, '/?page_id=2620'));
+insert into testurl values( url(url('http://www.ulb.be/en'), 'http://www.test.com/co/get-help-with-french'));
+insert into testurl values( url(url('http://www.ulb.be/en'), '/co/get-help-with-french'));
+insert into testurl values( url(url('http://www.ulb.be/en'), '/?page_id=2620'));
 
 
 

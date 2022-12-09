@@ -2,13 +2,19 @@ Drop EXTENSION url cascade;
 CREATE EXTENSION url;
 Create table testurl(Name url);
 Insert into testurl values(url('https://www.ulb.be/servlet/search?page=&site=%23&l=1&RH=1538989254560&beanKey=150bfcee-1f87-11e7-a0e0-b753bedcad22&q=test#1'));
+-- INSERT 0 1
 Insert into testurl values(url('www.ulb.be/en')); --Scheme missing  #Protocol mandatory
+-- result : Insert ERROR:  Unsupported/invalid URL spec provided (Error Code: 1): "www.ulb.be/en"
 Insert into testurl values(url('http://www.ulb.be:8080/en'));
+-- INSERT 0 1
 Insert into testurl values(url('https://www.ulb.be/en'));
+-- INSERT 0 1
 Insert into testurl values(url(''));
+-- result : ERROR:  Unsupported/invalid URL spec provided (Error Code: 1): ""
 Insert into testurl values(url('https://www.ulb.be/en'));
+-- INSERT 0 1
 Insert into testurl values(url('https://www.postgresqltutorial.com/postgresql-administration/postgresql-show-tables/#:~:text=Use%20the%20%5Cdt%20or%20%5Cdt%2B,pg_tables%20catalog.'));
-
+-- INSERT 0 1
 
 
 --###URL(varchar spec)
@@ -39,18 +45,18 @@ Insert into testurl values('','www.ulb.be','enrolment' ); --Protocol is empty ->
 --output will be `<protocol>:<file>` in case host is null or empty
 
 --###URL(URL context, varchar spec)
-insert into testurl values( url(url('http://www.ulb.be/en')::url, 'http://www.test.com/co/get-help-with-french'));
-insert into testurl values( url(url('http://www.ulb.be/en')::url, '/co/get-help-with-french'));
+insert into testurl values( url(url('http://www.ulb.be/en'), 'http://www.test.com/co/get-help-with-french'));
+insert into testurl values( url(url('http://www.ulb.be/en'), '/co/get-help-with-french'));
 Insert into testurl values('www.ulb.be/en','en/get-help-with-french'); --No protocol specified  ->n case of null context the URL, the spec part has to be a valid URL or a file or `no protocol` will be thrown 
-;-- No protocol in the context, since the pec part has a valid URL NO ERROR should be thrown
+-- No protocol in the context, since the pec part has a valid URL NO ERROR should be thrown
  --Spec is null -> Cannot invoke "String.equals(Object)" because "spec" is null error will be thrown
  --Spec is empty -> full context will be returned as is
-insert into testurl values( url(url('http://www.ulb.be/en')::url, '/?page_id=2620'));
+insert into testurl values( url(url('http://www.ulb.be/en'), '/?page_id=2620'));
 --in case of spec as query  
 --context will be returned until `<query>` and what's after it, and they will be replaced by **spec**
-insert into testurl values( url(url('http://www.ulb.be/en/?page_id=10000')::url, '/?page_id=2620'));
-insert into testurl values( url(url('http://www.ulb.be/en/?page_id=10000')::url, '/?page_id=20000'));
-insert into testurl values( url(url('http://www.ulb.be/en/?page_id=10000')::url, ''));
+insert into testurl values( url(url('http://www.ulb.be/en/?page_id=10000'), '/?page_id=2620'));
+insert into testurl values( url(url('http://www.ulb.be/en/?page_id=10000'), '/?page_id=20000'));
+insert into testurl values( url(url('http://www.ulb.be/en/?page_id=10000'), ''));
 
 
 --boolean equals(URL url1, URL url2) Compares two URLs for equality. This operation must be index-supported.
