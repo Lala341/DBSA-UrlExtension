@@ -52,6 +52,7 @@ Insert into testurl values('www.ulb.be/en','en/get-help-with-french'); --No prot
  --Spec is null -> Cannot invoke "String.equals(Object)" because "spec" is null error will be thrown
  --Spec is empty -> full context will be returned as is
 insert into testurl values( url(url('http://www.ulb.be/en'), '/?page_id=2620'));
+-- result : http://www.ulb.be/en/?page_id=20000
 --in case of spec as query  
 --context will be returned until `<query>` and what's after it, and they will be replaced by **spec**
 insert into testurl values( url(url('http://www.ulb.be/en/?page_id=10000'), '/?page_id=2620'));
@@ -92,5 +93,31 @@ where equals (url('https://www.ulb.be/servlet/search?page=&site=%23&l=1&RH=15389
 --varchar toString() Constructs a string representation of this URL
 Select toString(url('https://www.ulb.be/servlet/search?page=&site=%23&l=1&RH=1538989254560&beanKey=150bfcee-1f87-11e7-a0e0-b753bedcad22&q=test#1'));
 from testurl;
+
+
+select url('http://'); 
+-- result : http://
+
+select url('HtTps', NULL,5, '/hh?rrq=5');
+-- result : HtTps://hh?rrq=5
+
+select url('http://nobody'); 
+-- result : http://nobody
+
+select equals(NULL, URL url2) ;
+select getAuthority(NULL) ;
+select getDefaultPort(NULL);    
+select getFile(NULL)      ;
+select getHost(NULL)     ;
+select getPath(NULL)    ;
+select getPort(NULL)     ;
+select getProtocol(NULL)  ; 
+select getQuery(NULL);
+select getRef(NULL)   ;
+select getUserInfo(NULL); 
+select sameFile(NULL, URL url2); 
+select sameHost(URL url1,NULL) ;
+select toString(NULL);
+-- results : ERROR:  INPUT must not be NULL, spec.
 
 --Drop table testurl;

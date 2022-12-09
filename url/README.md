@@ -44,7 +44,7 @@ In the case of a file: `protocol=file`
 
 3. The syntax of URL is defined by RFC 2396: Uniform Resource Identifiers (URI): Generic Syntax.
 
-
+4. if we called URL(URL, "/?q=9#pp"), it will concatenate the path from URL and the (/?q=9#pp) and remove query and fragment from the URL
 
 ## Constructors
 
@@ -132,14 +132,21 @@ The extension supports 4 constructors, defined below:
 
 > If the spec is invalid, you get an error of the form Invalid URL pattern provided. 
 
-> Example: 
-`select url(('http://www.ulb.be/en')::url, 'http://www.test.com/co/get-help-with-french');`
-> result: 
+> Examples: 
+`select url(('http://www.ulb.be/en'), 'http://www.test.com/co/get-help-with-french');`
+> results: 
 `                     url                     
 ---------------------------------------------
  http://www.test.com/co/get-help-with-french
 (1 row)`
 
+> Examples: 
+`select url(('http://www.ulb.be/en'), '/?test=5#6');`
+> results: 
+`                     url                     
+---------------------------------------------
+ http://www.test.com/en/?test=5#6
+(1 row)`
 
 
 
@@ -151,19 +158,19 @@ List of methods and its support of index.
 | Return type | Method | Index supported | 
 | ----------- | ----------- | ----------- | 
 | boolean | equals(URL url1, URL url2) | Y |  
-| varchar | getAuthority() | N |      
+| CString | getAuthority() | N |      
 | int | getDefaultPort() | N |    
-| varchar | getFile() | N |      
-| varchar | getHost() | N |     
-| varchar | getPath() | N |    
+| CString | getFile() | N |      
+| CString | getHost() | N |     
+| CString | getPath() | N |    
 | int | getPort() | N |     
-| varchar | getProtocol() | N |   
-| varchar | getQuery() | N |    
-| String | getRef() | N |   
-| String | getUserInfo() | N |    
+| CString | getProtocol() | N |   
+| CString | getQuery() | N |    
+| CString | getRef() | N |   
+| CString | getUserInfo() | N |    
 | boolean | sameFile(URL url1, URL url2) | Y |    
 | boolean | sameHost(URL url1, URL url2) | Y |    
-| varchar | toString() | N |   
+| CString | toString() | N |   
 
 
 ## Support Methods
@@ -190,7 +197,7 @@ List of methods and its support of index.
 > returns `80` if protocol is HTTP  
 > returns `443` if protocol is HTTPS  
 > returns `21` if protocol is FTP  
-> returns `-1` if it's file or jar 
+> returns `-1` if it's file
 
 
 ### varchar getFile()
@@ -227,19 +234,19 @@ List of methods and its support of index.
 ### varchar getQuery()
 
 > Gets the query part of this URL.  
-> returns `<query>` if defined or `null` if not
+> returns `<query>` if defined or empty if not
 
 
 ### String getRef()
 
 > Gets the anchor (also known as the "reference") of this URL.  
-> returns `<fragment>` if defined or `null` if not 
+> returns `<fragment>` if defined or empty if not 
 
 
 ### String getUserInfo()
 
 > Gets the userInfo part of this URL.  
-> returns `<userInfo>` if defined as `<scheme>://<userInfo>@<website>`, else it returns `null`
+> returns `<userInfo>` if defined as `<scheme>://<userInfo>@<website>`, else it returns empty
 
 
 ### boolean sameFile(URL url1, URL url2)
@@ -251,7 +258,7 @@ List of methods and its support of index.
 ### boolean sameHost(URL url1, URL url2)
 
 > Compares the hosts of two URLs.  
-> returns `<true>` if `<host>` argument is equal in both URLs
+> returns `<true>` if `<host>` argument is equal in both URLs even if they have different `<UserInfo>`
 
 
 ### varchar toString()
