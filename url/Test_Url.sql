@@ -2,7 +2,7 @@ Drop EXTENSION url cascade;
 CREATE EXTENSION url;
 Create table testurl(Name url);
 Insert into testurl values(url('https://www.ulb.be/servlet/search?page=&site=%23&l=1&RH=1538989254560&beanKey=150bfcee-1f87-11e7-a0e0-b753bedcad22&q=test#1'));
-Insert into testurl values(url('www.ulb.be/en'));
+Insert into testurl values(url('www.ulb.be/en')); --Scheme missing  #Protocol mandatory
 Insert into testurl values(url('http://www.ulb.be:8080/en'));
 Insert into testurl values(url('https://www.ulb.be/en'));
 Insert into testurl values(url(''));
