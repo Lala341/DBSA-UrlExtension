@@ -1,5 +1,10 @@
 # PostgreSQL URL data type
 
+-- Team:
+-- Mirwise Khan				000559876
+-- Laura Forero Camacho		000566037
+-- Abdalrhman Abu-Sbeit		000566321
+-- Jezuela Gega				000561082    
 
 This datatype is internally a *text pointer*. The functions and assumptions were defined following the documentation of the Java URL library.
 
