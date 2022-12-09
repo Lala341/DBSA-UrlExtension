@@ -660,13 +660,13 @@ path=psprintf("%s", path_add);
     }
 
 
-    elog(INFO,"protocol: %s", protocol);
-    elog(INFO,"userinfo: %s", userinfo);
-    elog(INFO,"host: %s", host);
-    elog(INFO,"port: %s", port);
-    elog(INFO,"path: %s", path);
-    elog(INFO,"query: %s", query);
-    elog(INFO,"fragment: %s", fragment);
+    // elog(INFO,"protocol: %s", protocol);
+    // elog(INFO,"userinfo: %s", userinfo);
+    // elog(INFO,"host: %s", host);
+    // elog(INFO,"port: %s", port);
+    // elog(INFO,"path: %s", path);
+    // elog(INFO,"query: %s", query);
+    // elog(INFO,"fragment: %s", fragment);
 
    
     }
@@ -989,13 +989,13 @@ URL * url_constructor_spec_for_context(char* spec, URL * url){
     }
 
 
-    elog(INFO,"protocol: %s", protocol);
-    elog(INFO,"userinfo: %s", userinfo);
-    elog(INFO,"host: %s", host);
-    elog(INFO,"port: %s", port);
-    elog(INFO,"path: %s", path);
-    elog(INFO,"query: %s", query);
-    elog(INFO,"fragment: %s", fragment);
+    // elog(INFO,"protocol: %s", protocol);
+    // elog(INFO,"userinfo: %s", userinfo);
+    // elog(INFO,"host: %s", host);
+    // elog(INFO,"port: %s", port);
+    // elog(INFO,"path: %s", path);
+    // elog(INFO,"query: %s", query);
+    // elog(INFO,"fragment: %s", fragment);
 
     URL * url_parts = build_url_with_all_parts(protocol, userinfo, host, port_final, path, query, fragment);
     return url_parts;
@@ -1057,6 +1057,7 @@ static inline char* url_spec_context(const URL * url, const char * spec)
     if(strcmp(spec,"")==0||spec==NULL){
         return url;
     }
+    
     if(protocol_c==true){
         URL *urlresult=url_constructor_spec(spec);  
         return urlresult;
