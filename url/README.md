@@ -11,14 +11,14 @@ This datatype is internally a *text pointer*. The functions and assumptions were
 
 ## Assumptions
 
-1. None of the constructor attributes can be NULL. In this case an error is thrown. This is defined as "INPUT must not be NULL <name_parameter>
+1. The protocol are mandatory in the URL.
 2. The url follows the following format:
 > `<protocol>://<userinfo>@<host>:<port>/<path>?<query>#<fragment>` 
 In this case a URL must follow the order, defined in the expression.
 Examples of a valid URL are:
-`https://www.ulb.be/servlet/search?page=&site=e7-a0e0-b753bedcad22&q=test#1`
+`https://www.ulb.be/servlet/search?page=e&q=test#12`
 Examples of an invalid URL are:
-`https://www.ulb.be/servlet/search?page=&site=e7-a0e0-b753bedcad22&q=test#12?e`
+`https://www.ulb.be/servlet/search?page=e&q=test#12?e`
 
 
 > A valid URL as defined by Java \
@@ -40,14 +40,15 @@ In the case of a file: `protocol=file`
 
 
 > Protocols supported by Java URL  
-> http , https , ftp , file , and jar
+> http , https , ftp , and file 
+
+3. The syntax of URL is defined by RFC 2396: Uniform Resource Identifiers (URI): Generic Syntax.
 
 
 
 ## Constructors
 
-The extension supports 4 constructors, of the form:
-
+The extension supports 4 constructors, defined below:
 
 
 ### URL(varchar spec)
@@ -88,9 +89,12 @@ The extension supports 4 constructors, of the form:
 > If the URL is invalid, you get an error of the form Invalid URL pattern provided. 
 
 > Example: 
-``
+`Select url('https','www.ulb.be',443,'enrolment');`
 > result: 
-``
+`               url                
+----------------------------------
+ https://www.ulb.be:443/enrolment
+(1 row)`
 
 ### URL(varchar protocol, varchar host, varchar file)
  
@@ -105,9 +109,12 @@ The extension supports 4 constructors, of the form:
 > If the URL is invalid, you get an error of the form Invalid URL pattern provided. 
 
 > Example: 
-``
+`select url('https','www.ulb.be','enrolment' );`
 > result: 
-``
+`             url              
+------------------------------
+ https://www.ulb.be/enrolment
+(1 row)`
 
 ### URL(URL context, varchar spec)
 
