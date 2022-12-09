@@ -8,6 +8,7 @@
 
 This datatype is internally a *text pointer*. The functions and assumptions were defined following the documentation of the Java URL library.
 
+-- test files are named abnormal_Test_Url.sql and NormalScenarios_Script.sql
 
 ## Assumptions
 
