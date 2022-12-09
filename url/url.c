@@ -657,7 +657,6 @@ URL * url_constructor_spec_for_context(char* spec, URL * url){
     char* regexfile="^((file:[\\/]+)?([^\\/\\?\\#\\:]+)?(\\/[^\\/\\?\\#]*)*(\\/)?)$";
 
     URL *urlspec=url_constructor_spec_regex(spec,regexnormal , regexfile);
-    
     char *protocol_ind = url->data;
     char *userinfo_ind = protocol_ind + url->protocol;
     char *host_ind = userinfo_ind + url->userinfo;
@@ -715,13 +714,14 @@ URL * url_constructor_spec_for_context(char* spec, URL * url){
     URL * url_parts = build_url_with_all_parts(protocol, userinfo, host, port_final, path, query, fragment);
     return url_parts;
 } 
-static inline char* url_spec_context(const URL * url, const char * spec)
-{
+
+static inline char* url_spec_context(const URL * url, const char * spec){
+
     bool check_general = check_regex_part(true,spec, "^(([a-zA-Z]+:[\\/]+)?([^\\/\\?\\#\\:]+@)?([^\\/\\?\\#\\:]+)?(:[0-9]{1,5})?(\\/[^\\/\\?\\#\\:]*)*(\\/)?(\\?[^\\/\\?\\#\\:]+)?(\\#[^\\/\\?\\#]+)?)$");
     bool protocol_c = check_regex_part(false,spec, "^(([a-zA-Z]+:[\\/]+)([^\\/\\?\\#\\:]+@)?([^\\/\\?\\#\\:]+)?(:[0-9]{1,5})?(\\/[^\\/\\?\\#\\:]*)*(\\/)?(\\?[^\\/\\?\\#\\:]+)?(\\#[^\\/\\?\\#]+)?)$");
 
 
-    if(strcmp(spec,"")==0||spec==NULL){
+    if(strcmp(spec,"")==0){
         return url;
     }
 
