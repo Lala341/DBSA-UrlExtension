@@ -218,14 +218,21 @@ URL * url_constructor_spec_regex(char* spec, char* regexnormal, char* regexfile)
 
         }
         if(strcmp(last_split_character,"://")==0){
+
+            if(p&&strcmp(p,"")!=0){
             temp_clean_data=psprintf("%s", p);
-            temp_clean_data=strtok(temp_clean_data, "@:/?#");
-            if(userinfo_c==true){
-                userinfo=psprintf("%s", temp_clean_data);
-            }else{
-                 host=psprintf("%s", temp_clean_data);
+                        temp_clean_data=strtok(temp_clean_data, "@:/?#");
+                        if(userinfo_c==true){
+                            userinfo=psprintf("%s", temp_clean_data);
+                        }else{
+                                host=psprintf("%s", temp_clean_data);
+                            
+                    }
+                           
 
             }
+               
+            
         }else if(strcmp(last_split_character,"@")==0){
             temp_clean_data=psprintf("%s", p);
             temp_clean_data=strtok(temp_clean_data, ":/?#");
@@ -236,8 +243,11 @@ URL * url_constructor_spec_regex(char* spec, char* regexnormal, char* regexfile)
             port=psprintf("%s", temp_clean_data);
         }else if(strcmp(last_split_character,"/")==0){
             temp_clean_data=psprintf("%s", p);
-            temp_clean_data=strtok(temp_clean_data, "?#");
-            path=psprintf("%s", temp_clean_data);
+            bool start_something = check_regex_part(false,temp_clean_data, "^[\\/\\?\\#\\:]");
+            if(start_something==false){
+                temp_clean_data=strtok(temp_clean_data, "?#");
+                path=psprintf("%s", temp_clean_data);
+            }
         }else if(strcmp(last_split_character,"?")==0){
             temp_clean_data=psprintf("%s", p);
             temp_clean_data=strtok(temp_clean_data, "#");
@@ -269,12 +279,16 @@ URL * url_constructor_spec_regex(char* spec, char* regexnormal, char* regexfile)
 
         }
         if(strcmp(last_split_character,"://")==0){
+            if(p&&strcmp(p,"")!=0){
             temp_clean_data=psprintf("%s", p);
             temp_clean_data=strtok(temp_clean_data, "@:/?#");
             if(userinfo_c==true){
                 userinfo=psprintf("%s", temp_clean_data);
             }else{
-                 host=psprintf("%s", temp_clean_data);
+                    host=psprintf("%s", temp_clean_data);
+                
+        }
+                           
 
             }
         }else if(strcmp(last_split_character,"@")==0){
@@ -287,8 +301,11 @@ URL * url_constructor_spec_regex(char* spec, char* regexnormal, char* regexfile)
             port=psprintf("%s", temp_clean_data);
         }else if(strcmp(last_split_character,"/")==0){
             temp_clean_data=psprintf("%s", p);
-            temp_clean_data=strtok(temp_clean_data, "?#");
-            path=psprintf("%s", temp_clean_data);
+            bool start_something = check_regex_part(false,temp_clean_data, "^[\\/\\?\\#\\:]");
+            if(start_something==false){
+                temp_clean_data=strtok(temp_clean_data, "?#");
+                path=psprintf("%s", temp_clean_data);
+            }
         }else if(strcmp(last_split_character,"?")==0){
             temp_clean_data=psprintf("%s", p);
             temp_clean_data=strtok(temp_clean_data, "#");
@@ -320,12 +337,16 @@ URL * url_constructor_spec_regex(char* spec, char* regexnormal, char* regexfile)
 
         }
         if(strcmp(last_split_character,"://")==0){
+            if(p&&strcmp(p,"")!=0){
             temp_clean_data=psprintf("%s", p);
             temp_clean_data=strtok(temp_clean_data, "@:/?#");
             if(userinfo_c==true){
                 userinfo=psprintf("%s", temp_clean_data);
             }else{
-                 host=psprintf("%s", temp_clean_data);
+                    host=psprintf("%s", temp_clean_data);
+                
+        }
+                           
 
             }
         }else if(strcmp(last_split_character,"@")==0){
@@ -338,8 +359,11 @@ URL * url_constructor_spec_regex(char* spec, char* regexnormal, char* regexfile)
             port=psprintf("%s", temp_clean_data);
         }else if(strcmp(last_split_character,"/")==0){
             temp_clean_data=psprintf("%s", p);
-            temp_clean_data=strtok(temp_clean_data, "?#");
-            path=psprintf("%s", temp_clean_data);
+            bool start_something = check_regex_part(false,temp_clean_data, "^[\\/\\?\\#\\:]");
+            if(start_something==false){
+                temp_clean_data=strtok(temp_clean_data, "?#");
+                path=psprintf("%s", temp_clean_data);
+            }
         }else if(strcmp(last_split_character,"?")==0){
             temp_clean_data=psprintf("%s", p);
             temp_clean_data=strtok(temp_clean_data, "#");
@@ -380,12 +404,16 @@ URL * url_constructor_spec_regex(char* spec, char* regexnormal, char* regexfile)
 
         }
         if(strcmp(last_split_character,"://")==0){
+            if(p&&strcmp(p,"")!=0){
             temp_clean_data=psprintf("%s", p);
             temp_clean_data=strtok(temp_clean_data, "@:/?#");
             if(userinfo_c==true){
                 userinfo=psprintf("%s", temp_clean_data);
             }else{
-                 host=psprintf("%s", temp_clean_data);
+                    host=psprintf("%s", temp_clean_data);
+                
+        }
+                           
 
             }
         }else if(strcmp(last_split_character,"@")==0){
@@ -398,8 +426,12 @@ URL * url_constructor_spec_regex(char* spec, char* regexnormal, char* regexfile)
             port=psprintf("%s", temp_clean_data);
         }else if(strcmp(last_split_character,"/")==0){
             temp_clean_data=psprintf("%s", p);
-            temp_clean_data=strtok(temp_clean_data, "?#");
-            path=psprintf("%s", temp_clean_data);
+            bool start_something = check_regex_part(false,temp_clean_data, "^[\\/\\?\\#\\:]");
+            if(start_something==false){
+                temp_clean_data=strtok(temp_clean_data, "?#");
+                path=psprintf("%s", temp_clean_data);
+            }
+            
         }else if(strcmp(last_split_character,"?")==0){
             temp_clean_data=psprintf("%s", p);
             temp_clean_data=strtok(temp_clean_data, "#");
@@ -430,12 +462,16 @@ URL * url_constructor_spec_regex(char* spec, char* regexnormal, char* regexfile)
 
         }
         if(strcmp(last_split_character,"://")==0){
+            if(p&&strcmp(p,"")!=0){
             temp_clean_data=psprintf("%s", p);
             temp_clean_data=strtok(temp_clean_data, "@:/?#");
             if(userinfo_c==true){
                 userinfo=psprintf("%s", temp_clean_data);
             }else{
-                 host=psprintf("%s", temp_clean_data);
+                    host=psprintf("%s", temp_clean_data);
+                
+        }
+                           
 
             }
         }else if(strcmp(last_split_character,"@")==0){
@@ -448,8 +484,11 @@ URL * url_constructor_spec_regex(char* spec, char* regexnormal, char* regexfile)
             port=psprintf("%s", temp_clean_data);
         }else if(strcmp(last_split_character,"/")==0){
             temp_clean_data=psprintf("%s", p);
-            temp_clean_data=strtok(temp_clean_data, "?#");
-            path=psprintf("%s", temp_clean_data);
+            bool start_something = check_regex_part(false,temp_clean_data, "^[\\/\\?\\#\\:]");
+            if(start_something==false){
+                temp_clean_data=strtok(temp_clean_data, "?#");
+                path=psprintf("%s", temp_clean_data);
+            }
         }else if(strcmp(last_split_character,"?")==0){
             temp_clean_data=psprintf("%s", p);
             temp_clean_data=strtok(temp_clean_data, "#");
@@ -480,12 +519,16 @@ URL * url_constructor_spec_regex(char* spec, char* regexnormal, char* regexfile)
 
         }
         if(strcmp(last_split_character,"://")==0){
+            if(p&&strcmp(p,"")!=0){
             temp_clean_data=psprintf("%s", p);
             temp_clean_data=strtok(temp_clean_data, "@:/?#");
             if(userinfo_c==true){
                 userinfo=psprintf("%s", temp_clean_data);
             }else{
-                 host=psprintf("%s", temp_clean_data);
+                    host=psprintf("%s", temp_clean_data);
+                
+        }
+                           
 
             }
         }else if(strcmp(last_split_character,"@")==0){
@@ -498,28 +541,38 @@ URL * url_constructor_spec_regex(char* spec, char* regexnormal, char* regexfile)
             port=psprintf("%s", temp_clean_data);
         }else if(strcmp(last_split_character,"/")==0){
             temp_clean_data=psprintf("%s", p);
-            temp_clean_data=strtok(temp_clean_data, "?#");
-            path=psprintf("%s", temp_clean_data);
+            bool start_something = check_regex_part(false,temp_clean_data, "^[\\/\\?\\#\\:]");
+            if(start_something==false){
+                temp_clean_data=strtok(temp_clean_data, "?#");
+                path=psprintf("%s", temp_clean_data);
+            }
         }else if(strcmp(last_split_character,"?")==0){
             temp_clean_data=psprintf("%s", p);
             temp_clean_data=strtok(temp_clean_data, "#");
             query=psprintf("%s", temp_clean_data);
         }else if(strcmp(last_split_character,"#")==0){
             fragment=psprintf("%s", p);
-        }else if(strcmp(last_split_character,"")==0){
-            host=psprintf("%s", p);
         }
 
     }
     if(p){
 
         if(strcmp(last_split_character,"://")==0){
+           
+           
+          if(p&&strcmp(p,"")!=0){
+            temp_clean_data=psprintf("%s", p);
+            temp_clean_data=strtok(temp_clean_data, "@:/?#");
             if(userinfo_c==true){
                 userinfo=psprintf("%s", temp_clean_data);
             }else{
-                 host=psprintf("%s", temp_clean_data);
+                    host=psprintf("%s", temp_clean_data);
+                
+        }
+                           
 
             }
+            
         }
         if(strcmp(last_split_character,"@")==0){
             host=psprintf("%s", p);
@@ -581,6 +634,8 @@ URL * url_constructor_spec_regex(char* spec, char* regexnormal, char* regexfile)
     }
    
     }
+    elog(INFO, "protocol:%s",protocol );
+    elog(INFO, "host:%s",host );
      URL *url = build_url_with_all_parts(protocol, userinfo, host, port_final, path, query, fragment);
 
     return url;
